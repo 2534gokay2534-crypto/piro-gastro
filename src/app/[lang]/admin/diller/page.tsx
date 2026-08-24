@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { isLang, type Lang } from "@/lib/i18n";
 import { dilEkle, dilDurumu } from "@/app/actions/ceviri";
+import VeritabaniGerekli from "@/components/VeritabaniGerekli";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,14 @@ export default async function DillerPage({ params }: { params: Promise<{ lang: s
   if (!isLang(lang)) notFound();
   const l = lang as Lang;
 
-  const diller = await db.language.findMany({ orderBy: { sort: "asc" } });
-  const urunSayisi = await db.product.count();
+  // Veritabanı yoksa çökme — ne yapılacağını anlatan ekranı göster.
+  let diller, urunSayisi;
+  try {
+    diller = await db.language.findMany({ orderBy: { sort: "asc" } });
+    urunSayisi = await db.product.count();
+  } catch (e) {
+    return <VeritabaniGerekli lang={l} sayfa="Diller" hata={String(e).slice(0, 300)} />;
+  }
 
   // dil başına kapsam
   const kapsam = await Promise.all(

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { isLang, type Lang } from "@/lib/i18n";
 import { urunMetniKaydet, ozellikMetniKaydet, kilidiAc } from "@/app/actions/ceviri";
+import VeritabaniGerekli from "@/components/VeritabaniGerekli";
 
 export const dynamic = "force-dynamic";
 
@@ -28,16 +29,20 @@ export default async function CeviriDuzenle({
   if (!isLang(lang)) notFound();
   const l = lang as Lang;
 
-  const urun = await db.product.findUnique({
-    where: { sku: decodeURIComponent(sku) },
-    include: {
-      texts: true,
-      specs: { orderBy: { sort: "asc" }, include: { texts: true } },
-    },
-  });
+  let urun, diller;
+  try {
+    urun = await db.product.findUnique({
+      where: { sku: decodeURIComponent(sku) },
+      include: {
+        texts: true,
+        specs: { orderBy: { sort: "asc" }, include: { texts: true } },
+      },
+    });
+    diller = await db.language.findMany({ where: { enabled: true }, orderBy: { sort: "asc" } });
+  } catch (e) {
+    return <VeritabaniGerekli lang={l} sayfa="Çeviri düzenle" hata={String(e).slice(0, 300)} />;
+  }
   if (!urun) notFound();
-
-  const diller = await db.language.findMany({ where: { enabled: true }, orderBy: { sort: "asc" } });
   const metin = (kod: string) => urun.texts.find((t) => t.langCode === kod);
 
   return (
