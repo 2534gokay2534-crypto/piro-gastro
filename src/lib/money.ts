@@ -45,7 +45,13 @@ export function netCents(p: {
   return Math.round(p.priceCents * (1 - p.campaignPercent / 100));
 }
 
-export function stockState(p: { stock: number; threshold: number }): "out" | "low" | "ok" {
+export function stockState(p: {
+  stock: number;
+  threshold: number;
+  onRequest?: boolean;
+}): "out" | "low" | "ok" | "request" {
+  // Tedarikçi stok bildirmiyorsa "stokta yok" demek yanlış olur.
+  if (p.onRequest) return "request";
   if (p.stock <= 0) return "out";
   if (p.stock <= p.threshold) return "low";
   return "ok";

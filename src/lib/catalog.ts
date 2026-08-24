@@ -34,6 +34,8 @@ export type Product = {
   priceCents: number;
   stock: number;
   threshold: number;
+  /** Tedarikçide stok bilgisi yok — 'sipariş üzerine' */
+  onRequest?: boolean;
   leadDays: number;
   warranty: number;
   hidden: boolean;

@@ -126,11 +126,19 @@ export default async function ProductPage({
                   ? "bg-red-50 text-danger"
                   : st === "low"
                     ? "bg-amber-50 text-warn"
-                    : "bg-emerald-50 text-ok")
+                    : st === "request"
+                      ? "bg-steel-100 text-steel-700"
+                      : "bg-emerald-50 text-ok")
               }
             >
-              {st === "out" ? t("outOfStock", l) : st === "low" ? t("lowStock", l) : t("inStock", l)}
-              {st !== "out" && ` · ${p.stock}`}
+              {st === "out"
+                ? t("outOfStock", l)
+                : st === "low"
+                  ? t("lowStock", l)
+                  : st === "request"
+                    ? `${t("onRequest", l)} · ${p.leadDays} ${t("days", l)}`
+                    : t("inStock", l)}
+              {st === "ok" || st === "low" ? ` · ${p.stock}` : ""}
             </span>
           </div>
 

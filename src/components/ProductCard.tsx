@@ -68,14 +68,18 @@ export default function ProductCard({ p, lang }: { p: CardProduct; lang: Lang })
                   ? "bg-red-50 text-danger"
                   : st === "low"
                     ? "bg-amber-50 text-warn"
-                    : "bg-emerald-50 text-ok")
+                    : st === "request"
+                      ? "bg-steel-100 text-steel-700"
+                      : "bg-emerald-50 text-ok")
               }
             >
               {st === "out"
                 ? t("outOfStock", lang)
                 : st === "low"
                   ? t("lowStock", lang)
-                  : t("inStock", lang)}
+                  : st === "request"
+                    ? t("onRequest", lang)
+                    : t("inStock", lang)}
             </span>
           </div>
         </div>

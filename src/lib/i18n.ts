@@ -57,6 +57,7 @@ export const UI: Dict = {
   inStock: { sv: "I lager", en: "In stock", tr: "Stokta" },
   lowStock: { sv: "Få kvar", en: "Low stock", tr: "Az kaldı" },
   outOfStock: { sv: "Slut i lager", en: "Out of stock", tr: "Stokta yok" },
+  onRequest: { sv: "Beställningsvara", en: "On request", tr: "Sipariş üzerine" },
   from: { sv: "från", en: "from", tr: "başlangıç" },
   viewAll: { sv: "Visa alla", en: "View all", tr: "Tümünü gör" },
   itemNo: { sv: "Artikelnr", en: "Item no.", tr: "Stok kodu" },
