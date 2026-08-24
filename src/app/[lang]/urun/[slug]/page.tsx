@@ -77,24 +77,28 @@ export default async function ProductPage({
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
         {/* görseller */}
         <div>
-          <div className="aspect-[4/3] overflow-hidden rounded-[10px] border border-steel-200 bg-steel-50">
-            {p.images[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={p.images[0].url}
-                alt={pick(p, "name", l)}
-                className="h-full w-full object-contain p-6"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-steel-500">{p.sku}</div>
+          {/* Görsel + ölçü katmanı yan yana.
+              Geniş ekranda şema görselin sağında, dar ekranda altına iner. */}
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
+            <div className="aspect-[4/3] flex-1 overflow-hidden rounded-[10px] border border-steel-200 bg-steel-50">
+              {p.images[0] ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={p.images[0].url}
+                  alt={pick(p, "name", l)}
+                  className="h-full w-full object-contain p-6"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-steel-500">{p.sku}</div>
+              )}
+            </div>
+
+            {p.dims && (
+              <div className="xl:w-[268px] xl:shrink-0">
+                <DimensionDiagram dims={p.dims} lang={l} weightKg={p.weightKg} />
+              </div>
             )}
           </div>
-          {/* ölçü katmanı — veri varsa görselin hemen altında */}
-          {p.dims && (
-            <div className="mt-3">
-              <DimensionDiagram dims={p.dims} lang={l} weightKg={p.weightKg} />
-            </div>
-          )}
 
           {p.images.length > 1 && (
             <div className="mt-3 grid grid-cols-5 gap-2">
