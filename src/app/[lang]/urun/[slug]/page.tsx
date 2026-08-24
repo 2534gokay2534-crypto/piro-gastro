@@ -5,6 +5,7 @@ import { productBySlug, categoryById, brand as getBrand } from "@/lib/catalog";
 import { pick, t, isLang, type Lang } from "@/lib/i18n";
 import { money, netCents, stockState } from "@/lib/money";
 import AddToCart from "@/components/AddToCart";
+import DimensionDiagram from "@/components/DimensionDiagram";
 
 export const revalidate = 300;
 
@@ -88,6 +89,13 @@ export default async function ProductPage({
               <div className="flex h-full items-center justify-center text-steel-500">{p.sku}</div>
             )}
           </div>
+          {/* ölçü katmanı — veri varsa görselin hemen altında */}
+          {p.dims && (
+            <div className="mt-3">
+              <DimensionDiagram dims={p.dims} lang={l} weightKg={p.weightKg} />
+            </div>
+          )}
+
           {p.images.length > 1 && (
             <div className="mt-3 grid grid-cols-5 gap-2">
               {p.images.slice(0, 10).map((im, i) => (

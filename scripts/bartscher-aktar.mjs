@@ -133,6 +133,15 @@ for (const blok of urunBloklari(XML)) {
 
   const fiyat = parseFloat(cikar(blok, "listPrice")) || 0;
 
+  // Gerçek ölçüler — XML'de mm cinsinden, tüm ürünlerde mevcut
+  // Akla yatkınlık sınırı: kaynakta 535000 mm gibi hatalı değerler var.
+  const sayi = (t) => {
+    const v = parseFloat(cikar(blok, t));
+    return Number.isFinite(v) && v >= 3 && v <= 4000 ? Math.round(v) : null;
+  };
+  const w = sayi("netWidth"), d = sayi("netDepth"), h = sayi("netHeight");
+  const agirlik = parseFloat(cikar(blok, "netWeight"));
+
   const urun = {
     id: `bt-${kod}`,
     sku: kod,
@@ -156,6 +165,8 @@ for (const blok of urunBloklari(XML)) {
     sold: 0,
     images: gorseller,
     specs: ozellikler,
+    dims: w && d && h ? { w, d, h, unit: "mm" } : null,
+    weightKg: Number.isFinite(agirlik) && agirlik > 0 ? agirlik : null,
   };
 
   if (mevcutSku.has(kod)) {

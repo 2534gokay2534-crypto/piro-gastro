@@ -47,6 +47,9 @@ export type Product = {
   sold: number;
   images: ProductImage[];
   specs: ProductSpec[];
+  /** Gerçek ölçüler (mm) — kaynak: tedarikçi verisi */
+  dims?: { w: number; d: number; h: number; unit?: string } | null;
+  weightKg?: number | null;
 };
 
 export type Brand = { id: string; name: string; country: string | null };
