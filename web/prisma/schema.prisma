@@ -1,0 +1,300 @@
+// Piro Gastro Center AB — veritabanı şeması
+// Geliştirme: SQLite. Yayına alırken provider'ı "postgresql" yapmak yeterli.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------
+// KATALOG
+// ---------------------------------------------------------------
+
+model Category {
+  id       String  @id
+  slug     String  @unique
+  nameSv   String
+  nameEn   String
+  nameTr   String
+  descSv   String?
+  descEn   String?
+  descTr   String?
+  image    String?
+  icon     String?
+  sort     Int     @default(0)
+
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+
+  products    Product[] @relation("ProductCategory")
+  subProducts Product[] @relation("ProductSubCategory")
+
+  @@index([parentId])
+  @@index([sort])
+}
+
+model Brand {
+  id       String    @id
+  slug     String    @unique
+  name     String
+  logo     String?
+  country  String?
+  about    String?
+  products Product[]
+}
+
+model Product {
+  id     String @id @default(cuid())
+  sku    String @unique
+  slug   String @unique
+
+  nameSv String
+  nameEn String
+  nameTr String
+  descSv String?
+  descEn String?
+  descTr String?
+
+  categoryId String
+  category   Category @relation("ProductCategory", fields: [categoryId], references: [id])
+  subId      String?
+  sub        Category? @relation("ProductSubCategory", fields: [subId], references: [id])
+  brandId    String?
+  brand      Brand?    @relation(fields: [brandId], references: [id])
+
+  // fiyat: kuruş/öre cinsinden tamsayı — kayan nokta hatası olmasın
+  priceCents Int
+  costCents  Int  @default(0)
+  currency   String @default("EUR")
+
+  stock     Int @default(0)
+  threshold Int @default(4)
+  leadDays  Int @default(5)
+  warranty  Int @default(24)
+
+  hidden   Boolean @default(false)
+  featured Boolean @default(false)
+  badge    String?
+
+  campaignOn      Boolean   @default(false)
+  campaignPercent Int       @default(0)
+  campaignUntil   DateTime?
+
+  images ProductImage[]
+  specs  ProductSpec[]
+  tech   Json?
+
+  sold      Int      @default(0)
+  rating    Float    @default(4.5)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderLines OrderLine[]
+
+  @@index([categoryId])
+  @@index([subId])
+  @@index([brandId])
+  @@index([hidden])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  sort      Int     @default(0)
+
+  @@index([productId])
+}
+
+model ProductSpec {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String
+  value     String
+  sort      Int     @default(0)
+
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------
+// MÜŞTERİ / KULLANICI
+// ---------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(CUSTOMER)
+  active       Boolean  @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime @default(now())
+
+  customer Customer?
+}
+
+enum Role {
+  CUSTOMER
+  ACCOUNTANT
+  ADMIN
+  SUPER
+  OWNER
+}
+
+model Customer {
+  id      String  @id @default(cuid())
+  userId  String? @unique
+  user    User?   @relation(fields: [userId], references: [id])
+
+  name    String
+  company String?
+  email   String
+  phone   String?
+  vatNo   String?
+  addr    String?
+  zip     String?
+  city    String?
+  country String  @default("SE")
+
+  createdAt DateTime  @default(now())
+  orders    Order[]
+  invoices  Invoice[]
+
+  @@index([email])
+}
+
+// ---------------------------------------------------------------
+// SİPARİŞ / FATURA
+// ---------------------------------------------------------------
+
+model Order {
+  id     String @id @default(cuid())
+  number String @unique
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  // sipariş anındaki müşteri bilgisi dondurulur (fatura için şart)
+  billName    String
+  billCompany String?
+  billEmail   String
+  billPhone   String?
+  billVatNo   String?
+  billAddr    String?
+  billZip     String?
+  billCity    String?
+  billCountry String
+
+  netCents      Int
+  shippingCents Int   @default(0)
+  vatRate       Float
+  vatCents      Int
+  totalCents    Int
+  currency      String @default("EUR")
+
+  paymentMethod String
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentRef    String?
+  carrier       String?
+  status        OrderStatus   @default(NEW)
+  notes         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lines   OrderLine[]
+  invoice Invoice?
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum OrderStatus {
+  NEW
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model OrderLine {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  // ürün silinse bile fatura bozulmasın diye kopyalanır
+  sku        String
+  name       String
+  qty        Int
+  priceCents Int
+
+  @@index([orderId])
+}
+
+model Invoice {
+  id     String @id @default(cuid())
+  number String @unique
+
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  issuedAt DateTime @default(now())
+  dueAt    DateTime
+
+  netCents   Int
+  vatRate    Float
+  vatCents   Int
+  totalCents Int
+  currency   String @default("EUR")
+
+  paymentMethod String
+  paid          Boolean   @default(false)
+  paidAt        DateTime?
+
+  sentCount Int       @default(0)
+  sentAt    DateTime?
+
+  @@index([customerId])
+  @@index([issuedAt])
+}
+
+// ---------------------------------------------------------------
+// SİSTEM
+// ---------------------------------------------------------------
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     String
+  action    String
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

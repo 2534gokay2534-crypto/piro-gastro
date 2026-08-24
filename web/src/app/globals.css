@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Piro Gastro Center AB — renk paleti
+   Prototipteki onaylı paletin birebir aynısı. Değiştirilmedi.
+   --------------------------------------------------------------- */
+@theme {
+  --color-navy-950: #050d18;
+  --color-navy-900: #0a1b2e;
+  --color-navy-800: #0e2438;
+  --color-navy-700: #173350;
+  --color-navy-600: #22496e;
+  --color-navy-500: #2f6396;
+
+  --color-steel-900: #39424d;
+  --color-steel-700: #5a6674;
+  --color-steel-500: #8794a3;
+  --color-steel-400: #a9b4c0;
+  --color-steel-300: #c7d0da;
+  --color-steel-200: #dfe5ec;
+  --color-steel-100: #eef2f6;
+  --color-steel-50: #f7f9fb;
+
+  --color-gold-800: #8a6c28;
+  --color-gold-700: #a8842f;
+  --color-gold: #c8a24a;
+  --color-gold-400: #dcbe79;
+  --color-gold-200: #efe0bc;
+
+  --color-ok: #1a7f5a;
+  --color-warn: #b8860b;
+  --color-danger: #bb3b2b;
+
+  --shadow-c1: 0 1px 2px rgba(10, 27, 46, 0.06);
+  --shadow-c2: 0 2px 8px rgba(10, 27, 46, 0.08);
+  --shadow-c3: 0 6px 22px rgba(10, 27, 46, 0.1);
+  --shadow-c4: 0 14px 44px rgba(10, 27, 46, 0.16);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: #fff;
+  color: var(--color-steel-900);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Türkçe yerelde "Kitchen" -> "KİTCHEN" olmasın diye İngilizce
+   metinler lang="en" ile işaretlenir. */
+a {
+  color: inherit;
+  text-decoration: none;
+}

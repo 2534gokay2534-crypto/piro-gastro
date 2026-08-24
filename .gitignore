@@ -1,0 +1,32 @@
+# bağımlılıklar
+node_modules/
+.pnp
+.pnp.*
+
+# Next.js
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma — üretilen istemci ve yerel veritabanı (yeniden üretilir)
+web/src/generated/
+*.db
+*.db-journal
+*.sqlite
+
+# ortam değişkenleri (sırlar burada durur, asla gönderilmez)
+.env
+.env.*
+!.env.example
+
+# işletim sistemi / editör
+.DS_Store
+Thumbs.db
+*.pem
+npm-debug.log*
+yarn-error.log*
+
+# vercel
+.vercel
