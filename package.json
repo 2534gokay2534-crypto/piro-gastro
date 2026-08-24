@@ -9,9 +9,13 @@
     "lint": "eslint",
     "db:migrate": "prisma migrate deploy",
     "db:import": "node scripts/import-catalog.mjs && node scripts/sync-categories.mjs",
-    "catalog": "node scripts/build-catalog-json.mjs"
+    "catalog": "node scripts/build-catalog-json.mjs",
+    "db:aktar": "node scripts/db-aktar.mjs",
+    "db:yayinla": "node scripts/db-yayinla.mjs",
+    "ceviri": "node scripts/ceviri-calistir.mjs"
   },
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.9.1",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "bcryptjs": "^3.0.3",

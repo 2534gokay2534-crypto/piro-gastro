@@ -32,3 +32,6 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# yerel yedekler (geri dönüş için git etiketi kullanılır)
+yedek/

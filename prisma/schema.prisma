@@ -1,6 +1,11 @@
-// Piro Gastro Center AB — veritabanı şeması
-// PostgreSQL — hem geliştirmede hem yayında aynı veritabanı.
-// Bağlantı adresi .env içindeki DATABASE_URL ile verilir.
+// Piro Gastro Center AB — çok dilli katalog veritabanı
+//
+// Geliştirme: SQLite (kurulum gerektirmez, dev.db dosyası)
+// Yayın     : PostgreSQL — provider'ı "postgresql" yapıp DATABASE_URL vermek yeterli
+//
+// Çeviri tasarımı: her metin alanı AYRI SATIRDA, dil koduyla tutulur.
+// Yeni dil eklemek ŞEMA DEĞİŞİKLİĞİ GEREKTİRMEZ — Language tablosuna bir
+// satır eklenir, çeviri satırları o kodla yazılır.
 
 generator client {
   provider = "prisma-client-js"
@@ -8,7 +13,30 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------
+// DİLLER
+// ---------------------------------------------------------------
+
+model Language {
+  code     String  @id // sv, en, tr, de, ru…
+  name     String // Svenska, Deutsch…
+  locale   String // sv-SE
+  currency String  @default("EUR")
+  rate     Float   @default(1)
+  enabled  Boolean @default(true)
+  sort     Int     @default(0)
+
+  /// Çevirinin üretileceği kaynak dil
+  sourceCode String @default("en")
+
+  createdAt DateTime @default(now())
+
+  productTexts  ProductText[]
+  specTexts     SpecText[]
+  categoryTexts CategoryText[]
 }
 
 // ---------------------------------------------------------------
@@ -16,86 +44,89 @@ datasource db {
 // ---------------------------------------------------------------
 
 model Category {
-  id       String  @id
-  slug     String  @unique
-  nameSv   String
-  nameEn   String
-  nameTr   String
-  descSv   String?
-  descEn   String?
-  descTr   String?
-  image    String?
+  id       String     @id
+  slug     String     @unique
   icon     String?
-  sort     Int     @default(0)
-
+  sort     Int        @default(0)
   parentId String?
-  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryTree")
+  parent   Category?  @relation("Tree", fields: [parentId], references: [id])
+  children Category[] @relation("Tree")
 
-  products    Product[] @relation("ProductCategory")
-  subProducts Product[] @relation("ProductSubCategory")
+  texts       CategoryText[]
+  products    Product[]      @relation("Cat")
+  subProducts Product[]      @relation("Sub")
 
   @@index([parentId])
   @@index([sort])
+}
+
+model CategoryText {
+  id         String   @id @default(cuid())
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  langCode   String
+  lang       Language @relation(fields: [langCode], references: [code], onDelete: Cascade)
+
+  name String
+  desc String?
+
+  /// source | manual | machine
+  origin    String   @default("manual")
+  updatedAt DateTime @updatedAt
+
+  @@unique([categoryId, langCode])
+  @@index([langCode])
 }
 
 model Brand {
   id       String    @id
   slug     String    @unique
   name     String
-  logo     String?
   country  String?
-  about    String?
   products Product[]
 }
 
 model Product {
-  id     String @id @default(cuid())
-  sku    String @unique
-  slug   String @unique
-
-  nameSv String
-  nameEn String
-  nameTr String
-  descSv String?
-  descEn String?
-  descTr String?
+  id   String @id
+  sku  String @unique
+  slug String @unique
 
   categoryId String
-  category   Category @relation("ProductCategory", fields: [categoryId], references: [id])
+  category   Category  @relation("Cat", fields: [categoryId], references: [id])
   subId      String?
-  sub        Category? @relation("ProductSubCategory", fields: [subId], references: [id])
+  sub        Category? @relation("Sub", fields: [subId], references: [id])
   brandId    String?
   brand      Brand?    @relation(fields: [brandId], references: [id])
 
-  // fiyat: kuruş/öre cinsinden tamsayı — kayan nokta hatası olmasın
-  priceCents Int
-  costCents  Int  @default(0)
-  currency   String @default("EUR")
-
-  stock     Int @default(0)
-  threshold Int @default(4)
-  leadDays  Int @default(5)
-  warranty  Int @default(24)
+  priceCents Int     @default(0)
+  currency   String  @default("EUR")
+  stock      Int     @default(0)
+  threshold  Int     @default(0)
+  onRequest  Boolean @default(false)
+  leadDays   Int     @default(5)
+  warranty   Int     @default(24)
 
   hidden   Boolean @default(false)
   featured Boolean @default(false)
   badge    String?
 
-  campaignOn      Boolean   @default(false)
-  campaignPercent Int       @default(0)
-  campaignUntil   DateTime?
+  campaignOn      Boolean @default(false)
+  campaignPercent Int     @default(0)
 
-  images ProductImage[]
-  specs  ProductSpec[]
-  tech   Json?
+  sold Int @default(0)
 
-  sold      Int      @default(0)
-  rating    Float    @default(4.5)
+  // ölçüler (mm)
+  dimW     Int?
+  dimD     Int?
+  dimH     Int?
+  weightKg Float?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orderLines OrderLine[]
+  texts  ProductText[]
+  images ProductImage[]
+  specs  Spec[]
 
   @@index([categoryId])
   @@index([subId])
@@ -103,182 +134,107 @@ model Product {
   @@index([hidden])
 }
 
+/// Ürünün bir dildeki metinleri. Dil başına tek satır.
+model ProductText {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  langCode  String
+  lang      Language @relation(fields: [langCode], references: [code], onDelete: Cascade)
+
+  name String
+  desc String?
+
+  /// source  = tedarikçiden geldi (özgün metin)
+  /// manual  = Süper Admin elle yazdı / düzeltti
+  /// machine = otomatik çeviriyle üretildi
+  origin String @default("machine")
+
+  /// Elle düzeltildiyse otomatik çeviri ÜZERİNE YAZMAZ
+  locked Boolean @default(false)
+
+  translatedAt DateTime?
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([productId, langCode])
+  @@index([langCode])
+  @@index([origin])
+}
+
 model ProductImage {
   id        String  @id @default(cuid())
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   url       String
-  alt       String?
   sort      Int     @default(0)
 
   @@index([productId])
 }
 
-model ProductSpec {
+/// Teknik özellik satırı — metni dile göre SpecText'te.
+model Spec {
   id        String  @id @default(cuid())
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  label     String
-  value     String
   sort      Int     @default(0)
+
+  texts SpecText[]
 
   @@index([productId])
 }
 
-// ---------------------------------------------------------------
-// MÜŞTERİ / KULLANICI
-// ---------------------------------------------------------------
+model SpecText {
+  id       String   @id @default(cuid())
+  specId   String
+  spec     Spec     @relation(fields: [specId], references: [id], onDelete: Cascade)
+  langCode String
+  lang     Language @relation(fields: [langCode], references: [code], onDelete: Cascade)
 
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         Role     @default(CUSTOMER)
-  active       Boolean  @default(true)
-  lastLogin    DateTime?
-  createdAt    DateTime @default(now())
+  label String
+  value String
 
-  customer Customer?
-}
+  origin       String    @default("machine")
+  locked       Boolean   @default(false)
+  translatedAt DateTime?
+  updatedAt    DateTime  @updatedAt
 
-enum Role {
-  CUSTOMER
-  ACCOUNTANT
-  ADMIN
-  SUPER
-  OWNER
-}
-
-model Customer {
-  id      String  @id @default(cuid())
-  userId  String? @unique
-  user    User?   @relation(fields: [userId], references: [id])
-
-  name    String
-  company String?
-  email   String
-  phone   String?
-  vatNo   String?
-  addr    String?
-  zip     String?
-  city    String?
-  country String  @default("SE")
-
-  createdAt DateTime  @default(now())
-  orders    Order[]
-  invoices  Invoice[]
-
-  @@index([email])
+  @@unique([specId, langCode])
+  @@index([langCode])
 }
 
 // ---------------------------------------------------------------
-// SİPARİŞ / FATURA
+// ÇEVİRİ ÖNBELLEĞİ
+// Aynı metin bir daha çevrilmesin diye kaynak metnin özeti saklanır.
+// Binlerce üründe tekrar eden etiketler tek çeviriyle karşılanır.
 // ---------------------------------------------------------------
 
-model Order {
-  id     String @id @default(cuid())
-  number String @unique
-
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
-
-  // sipariş anındaki müşteri bilgisi dondurulur (fatura için şart)
-  billName    String
-  billCompany String?
-  billEmail   String
-  billPhone   String?
-  billVatNo   String?
-  billAddr    String?
-  billZip     String?
-  billCity    String?
-  billCountry String
-
-  netCents      Int
-  shippingCents Int   @default(0)
-  vatRate       Float
-  vatCents      Int
-  totalCents    Int
-  currency      String @default("EUR")
-
-  paymentMethod String
-  paymentStatus PaymentStatus @default(PENDING)
-  paymentRef    String?
-  carrier       String?
-  status        OrderStatus   @default(NEW)
-  notes         String?
+model TranslationCache {
+  id       String @id @default(cuid())
+  /// kaynak metnin sha256 özeti
+  hash     String
+  fromCode String
+  toCode   String
+  source   String
+  target   String
+  provider String @default("deepl")
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  lines   OrderLine[]
-  invoice Invoice?
-
-  @@index([customerId])
-  @@index([status])
-  @@index([createdAt])
+  @@unique([hash, fromCode, toCode])
+  @@index([toCode])
 }
 
-enum OrderStatus {
-  NEW
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-}
-
-model OrderLine {
-  id      String @id @default(cuid())
-  orderId String
-  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  productId String?
-  product   Product? @relation(fields: [productId], references: [id])
-
-  // ürün silinse bile fatura bozulmasın diye kopyalanır
-  sku        String
-  name       String
-  qty        Int
-  priceCents Int
-
-  @@index([orderId])
-}
-
-model Invoice {
-  id     String @id @default(cuid())
-  number String @unique
-
-  orderId String @unique
-  order   Order  @relation(fields: [orderId], references: [id])
-
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
-
-  issuedAt DateTime @default(now())
-  dueAt    DateTime
-
-  netCents   Int
-  vatRate    Float
-  vatCents   Int
-  totalCents Int
-  currency   String @default("EUR")
-
-  paymentMethod String
-  paid          Boolean   @default(false)
-  paidAt        DateTime?
-
-  sentCount Int       @default(0)
-  sentAt    DateTime?
-
-  @@index([customerId])
-  @@index([issuedAt])
+/// Çeviri işlerinin kaydı — kaç çağrı, kaç karakter, kaç önbellek isabeti.
+model TranslationRun {
+  id         String    @id @default(cuid())
+  langCode   String
+  provider   String
+  items      Int       @default(0)
+  chars      Int       @default(0)
+  cacheHits  Int       @default(0)
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  note       String?
 }
 
 // ---------------------------------------------------------------
