@@ -15,19 +15,17 @@ export type Category = {
   parentId: string | null;
   icon: string | null;
   sort: number;
-  nameSv: string; nameEn: string; nameTr: string;
-  descSv: string | null; descEn: string | null; descTr: string | null;
+  i18n: Record<string, { name?: string; desc?: string }>;
 };
 
 export type ProductImage = { url: string };
-export type ProductSpec = { label: string; value: string };
+export type ProductSpec = { i18n: Record<string, { label: string; value: string }> };
 
 export type Product = {
   id: string;
   sku: string;
   slug: string;
-  nameSv: string; nameEn: string; nameTr: string;
-  descSv: string | null; descEn: string | null; descTr: string | null;
+  i18n: Record<string, { name?: string; desc?: string }>;
   categoryId: string;
   subId: string | null;
   brandId: string | null;
@@ -122,10 +120,8 @@ export function searchProducts(q: string): Product[] {
   if (!s) return visible;
   return visible.filter(
     (p) =>
-      p.nameEn.toLowerCase().includes(s) ||
-      p.nameSv.toLowerCase().includes(s) ||
-      p.nameTr.toLowerCase().includes(s) ||
-      p.sku.toLowerCase().includes(s),
+      p.sku.toLowerCase().includes(s) ||
+      Object.values(p.i18n ?? {}).some((x) => (x.name ?? "").toLowerCase().includes(s)),
   );
 }
 

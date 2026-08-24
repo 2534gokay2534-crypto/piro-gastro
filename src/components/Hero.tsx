@@ -25,10 +25,10 @@ const COPY = {
     lead: "Restoran, kafe, pastane ve oteller için endüstriyel mutfak ekipmanlarında kaliteli, güvenilir ve teknolojik çözümler.",
     btn: "Ürünleri incele",
   },
-} as const;
+} as Record<string, { kicker: string; title: string; gold: string; lead: string; btn: string }>;
 
 export default function Hero({ lang }: { lang: Lang }) {
-  const c = COPY[lang];
+  const c = COPY[lang] ?? COPY.en;
   return (
     <section className="relative flex min-h-[520px] items-end overflow-hidden bg-navy-950">
       {/* eslint-disable-next-line @next/next/no-img-element */}

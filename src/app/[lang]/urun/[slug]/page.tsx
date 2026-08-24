@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { productBySlug, categoryById, brand as getBrand } from "@/lib/catalog";
-import { pick, t, isLang, type Lang } from "@/lib/i18n";
+import { pick, strict, title as urunAdi, t, isLang, type Lang } from "@/lib/i18n";
 import { money, netCents, stockState } from "@/lib/money";
 import AddToCart from "@/components/AddToCart";
 import DimensionDiagram from "@/components/DimensionDiagram";
@@ -53,6 +53,15 @@ export default async function ProductPage({
   const net = netCents(p);
   const indirimli = net < p.priceCents;
   const st = stockState(p);
+
+  // --- SIKI TEK DİL ---
+  // Açıklama: yalnızca seçilen dilde; yoksa boş (bildirim gösterilir).
+  const aciklama = strict(p, "desc", l);
+  // Özellikler: yalnızca bu dile çevrilmiş satırlar; gerisi gizlenir.
+  const ozellikler = (p.specs ?? [])
+    .map((s) => s.i18n?.[l])
+    .filter((x): x is { label: string; value: string } => !!x?.label);
+  const gizlenen = (p.specs ?? []).length - ozellikler.length;
 
   return (
     <div className="mx-auto max-w-[1320px] px-5 py-8">
@@ -175,23 +184,26 @@ export default async function ProductPage({
         </div>
       </div>
 
-      {/* açıklama */}
-      {pick(p, "desc", l) && (
-        <section className="mt-14 max-w-[820px]">
-          <h2 className="text-[20px] font-extrabold text-navy-900">{t("description", l)}</h2>
-          <p className="mt-3 leading-relaxed whitespace-pre-line text-steel-900">
-            {pick(p, "desc", l)}
+      {/* AÇIKLAMA — yalnızca seçilen dilde. Çeviri yoksa İngilizce metin
+          buraya SIZDIRILMAZ; açık bir bildirim gösterilir. */}
+      <section className="mt-14 max-w-[820px]">
+        <h2 className="text-[20px] font-extrabold text-navy-900">{t("description", l)}</h2>
+        {aciklama ? (
+          <p className="mt-3 leading-relaxed whitespace-pre-line text-steel-900">{aciklama}</p>
+        ) : (
+          <p className="mt-3 rounded-md border border-steel-200 bg-steel-50 px-4 py-3 text-[13.4px] text-steel-700">
+            {t("noDesc", l)}
           </p>
-        </section>
-      )}
+        )}
+      </section>
 
-      {/* teknik özellikler */}
-      {p.specs.length > 0 && (
-        <section className="mt-12 max-w-[820px]">
-          <h2 className="text-[20px] font-extrabold text-navy-900">{t("specs", l)}</h2>
+      {/* TEKNİK ÖZELLİKLER — yalnızca bu dile çevrilmiş satırlar */}
+      <section className="mt-12 max-w-[820px]">
+        <h2 className="text-[20px] font-extrabold text-navy-900">{t("specs", l)}</h2>
+        {ozellikler.length > 0 ? (
           <table className="mt-3 w-full text-[13.4px]">
             <tbody>
-              {p.specs.map((s, i) => (
+              {ozellikler.map((s, i) => (
                 <tr key={i} className="border-b border-steel-200">
                   <td className="py-2 pr-4 text-steel-700">{s.label}</td>
                   <td className="py-2 font-semibold text-navy-900">{s.value}</td>
@@ -199,8 +211,18 @@ export default async function ProductPage({
               ))}
             </tbody>
           </table>
-        </section>
-      )}
+        ) : (
+          <p className="mt-3 rounded-md border border-steel-200 bg-steel-50 px-4 py-3 text-[13.4px] text-steel-700">
+            {t("noSpecs", l)}
+          </p>
+        )}
+
+        {gizlenen > 0 && (
+          <p className="mt-2 text-[12.2px] text-steel-500">
+            {gizlenen} {t("partialSpecs", l)}
+          </p>
+        )}
+      </section>
     </div>
   );
 }

@@ -33,7 +33,7 @@ export async function readCart(): Promise<CartLine[]> {
 }
 
 /** Sepeti ürün bilgileriyle birlikte, fiyatı VERİTABANINDAN okuyarak döner. */
-export async function cartDetail(lang: "sv" | "en" | "tr") {
+export async function cartDetail(lang: string) {
   const lines = await readCart();
   if (!lines.length) return { lines: [], netCents: 0, count: 0 };
 

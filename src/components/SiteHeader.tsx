@@ -17,11 +17,12 @@ export default async function SiteHeader({ lang }: { lang: Lang }) {
 
   const cart = await cartDetail(lang);
 
-  const kargo = {
+  const KARGO: Record<string, string> = {
     sv: "Fri frakt på alla order över 25 000 kr",
     en: "Free shipping on all orders over €2,500",
     tr: "2.500 € üzeri tüm siparişlerde ücretsiz kargo",
-  }[lang];
+  };
+  const kargo = KARGO[lang] ?? KARGO.en;
 
   return (
     <>

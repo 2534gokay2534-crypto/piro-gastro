@@ -24,13 +24,17 @@ const S = {
     sum: "Ara toplam", total: "Genel toplam", ship: "Kargo", free: "Ücretsiz kargo", checkout: "Ödemeye geç",
     remove: "Kaldır", freeHint: (x: string) => `Ücretsiz kargo için ${x} daha ekleyin`,
   },
-} as const;
+} as Record<string, {
+  title: string; empty: string; cont: string; sum: string; total: string;
+  ship: string; free: string; checkout: string; remove: string;
+  freeHint: (x: string) => string;
+}>;
 
 export default async function CartPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   if (!isLang(lang)) notFound();
   const l = lang as Lang;
-  const s = S[l];
+  const s = S[l] ?? S.en;
 
   const cart = await cartDetail(l);
   const kargo = shippingCents(cart.netCents);

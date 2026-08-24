@@ -17,7 +17,7 @@ const METIN = {
   sv: { baslik: "Mått", w: "Bredd", d: "Djup", h: "Höjd", agirlik: "Vikt" },
   en: { baslik: "Dimensions", w: "Width", d: "Depth", h: "Height", agirlik: "Weight" },
   tr: { baslik: "Ölçüler", w: "Genişlik", d: "Derinlik", h: "Yükseklik", agirlik: "Ağırlık" },
-} as const;
+} as Record<string, { baslik: string; w: string; d: string; h: string; agirlik: string }>;
 
 /** mm -> okunabilir metin (1000 mm ve üzeri cm olarak da yazılır) */
 function olcuMetni(mm: number): string {
@@ -34,7 +34,7 @@ export default function DimensionDiagram({
   lang: Lang;
   weightKg?: number | null;
 }) {
-  const t = METIN[lang];
+  const t = METIN[lang] ?? METIN.en;
   const { w, d, h } = dims;
 
   // --- SABİT TUVAL ---
