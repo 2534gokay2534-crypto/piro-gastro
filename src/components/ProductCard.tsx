@@ -2,22 +2,9 @@ import Link from "next/link";
 import { pick, t, type Lang } from "@/lib/i18n";
 import { money, netCents, stockState } from "@/lib/money";
 
-export type CardProduct = {
-  id: string;
-  slug: string;
-  sku: string;
-  nameSv: string;
-  nameEn: string;
-  nameTr: string;
-  priceCents: number;
-  campaignOn: boolean;
-  campaignPercent: number;
-  campaignUntil: Date | null;
-  stock: number;
-  threshold: number;
-  badge: string | null;
-  images: { url: string }[];
-};
+import type { Product } from "@/lib/catalog";
+
+export type CardProduct = Product;
 
 export default function ProductCard({ p, lang }: { p: CardProduct; lang: Lang }) {
   const net = netCents(p);

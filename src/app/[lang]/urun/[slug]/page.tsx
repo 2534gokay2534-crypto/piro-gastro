@@ -1,24 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { db } from "@/lib/db";
+import { productBySlug, categoryById, brand as getBrand } from "@/lib/catalog";
 import { pick, t, isLang, type Lang } from "@/lib/i18n";
 import { money, netCents, stockState } from "@/lib/money";
 import AddToCart from "@/components/AddToCart";
 
 export const revalidate = 300;
 
-async function getProduct(slug: string) {
-  return db.product.findUnique({
-    where: { slug },
-    include: {
-      images: { orderBy: { sort: "asc" } },
-      specs: { orderBy: { sort: "asc" } },
-      brand: true,
-      category: true,
-      sub: true,
-    },
-  });
+function getProduct(slug: string) {
+  const p = productBySlug(slug);
+  if (!p) return null;
+  const category = categoryById(p.categoryId);
+  if (!category) return null;
+  return {
+    ...p,
+    category,
+    sub: p.subId ? categoryById(p.subId) ?? null : null,
+    brand: getBrand(p.brandId) ?? null,
+  };
 }
 
 export async function generateMetadata({
@@ -27,7 +27,7 @@ export async function generateMetadata({
   params: Promise<{ lang: string; slug: string }>;
 }): Promise<Metadata> {
   const { lang, slug } = await params;
-  const p = await getProduct(slug);
+  const p = getProduct(slug);
   if (!p || !isLang(lang)) return {};
   const l = lang as Lang;
   return {
@@ -46,7 +46,7 @@ export default async function ProductPage({
   if (!isLang(lang)) notFound();
   const l = lang as Lang;
 
-  const p = await getProduct(slug);
+  const p = getProduct(slug);
   if (!p) notFound();
 
   const net = netCents(p);
@@ -90,9 +90,9 @@ export default async function ProductPage({
           </div>
           {p.images.length > 1 && (
             <div className="mt-3 grid grid-cols-5 gap-2">
-              {p.images.slice(0, 10).map((im) => (
+              {p.images.slice(0, 10).map((im, i) => (
                 <div
-                  key={im.id}
+                  key={i}
                   className="aspect-square overflow-hidden rounded border border-steel-200 bg-steel-50"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -171,8 +171,8 @@ export default async function ProductPage({
           <h2 className="text-[20px] font-extrabold text-navy-900">{t("specs", l)}</h2>
           <table className="mt-3 w-full text-[13.4px]">
             <tbody>
-              {p.specs.map((s) => (
-                <tr key={s.id} className="border-b border-steel-200">
+              {p.specs.map((s, i) => (
+                <tr key={i} className="border-b border-steel-200">
                   <td className="py-2 pr-4 text-steel-700">{s.label}</td>
                   <td className="py-2 font-semibold text-navy-900">{s.value}</td>
                 </tr>

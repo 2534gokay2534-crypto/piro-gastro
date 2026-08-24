@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
+import { searchProducts, sortForListing } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import { t, isLang, type Lang } from "@/lib/i18n";
 
@@ -23,30 +23,9 @@ export default async function AllProducts({
   const sayfa = Math.max(1, Number(s) || 1);
   const arama = (q ?? "").trim();
 
-  const where = {
-    hidden: false,
-    ...(arama
-      ? {
-          OR: [
-            { nameEn: { contains: arama } },
-            { nameSv: { contains: arama } },
-            { nameTr: { contains: arama } },
-            { sku: { contains: arama } },
-          ],
-        }
-      : {}),
-  };
-
-  const [toplam, urunler] = await Promise.all([
-    db.product.count({ where }),
-    db.product.findMany({
-      where,
-      orderBy: [{ featured: "desc" }, { sold: "desc" }],
-      skip: (sayfa - 1) * SAYFA,
-      take: SAYFA,
-      include: { images: { orderBy: { sort: "asc" }, take: 1 } },
-    }),
-  ]);
+  const hepsi = sortForListing(searchProducts(arama));
+  const toplam = hepsi.length;
+  const urunler = hepsi.slice((sayfa - 1) * SAYFA, sayfa * SAYFA);
 
   const sonSayfa = Math.max(1, Math.ceil(toplam / SAYFA));
   const temel = `/${l}/urunler${arama ? `?q=${encodeURIComponent(arama)}&` : "?"}`;

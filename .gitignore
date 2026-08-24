@@ -10,8 +10,10 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 
-# Prisma — üretilen istemci ve yerel veritabanı (yeniden üretilir)
-web/src/generated/
+# Prisma — üretilen istemci (yeniden üretilir)
+src/generated/
+
+# yerel veritabanı dosyaları
 *.db
 *.db-journal
 *.sqlite

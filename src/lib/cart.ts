@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { db } from "./db";
+import { productById } from "./catalog";
 import { netCents } from "./money";
 
 /**
@@ -37,15 +37,10 @@ export async function cartDetail(lang: "sv" | "en" | "tr") {
   const lines = await readCart();
   if (!lines.length) return { lines: [], netCents: 0, count: 0 };
 
-  const products = await db.product.findMany({
-    where: { id: { in: lines.map((l) => l.productId) }, hidden: false },
-    include: { images: { orderBy: { sort: "asc" }, take: 1 } },
-  });
-
   const detay = lines
     .map((l) => {
-      const p = products.find((x) => x.id === l.productId);
-      if (!p) return null;
+      const p = productById(l.productId);
+      if (!p || p.hidden) return null;
       const unit = netCents(p);
       return { product: p, qty: l.qty, unitCents: unit, lineCents: unit * l.qty };
     })

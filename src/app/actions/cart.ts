@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { CART_COOKIE, parseCart, serializeCart } from "@/lib/cart";
-import { db } from "@/lib/db";
+import { productById } from "@/lib/catalog";
 
 const BIR_YIL = 60 * 60 * 24 * 365;
 
@@ -21,11 +21,8 @@ async function yaz(lines: { productId: string; qty: number }[]) {
 
 export async function addToCart(productId: string, qty = 1) {
   // ürün gerçekten var mı ve yayında mı — çerezden gelen id'ye güvenilmez
-  const p = await db.product.findFirst({
-    where: { id: productId, hidden: false },
-    select: { id: true },
-  });
-  if (!p) return { ok: false as const, error: "not-found" };
+  const p = productById(productId);
+  if (!p || p.hidden) return { ok: false as const, error: "not-found" };
 
   const c = await cookies();
   const lines = parseCart(c.get(CART_COOKIE)?.value);

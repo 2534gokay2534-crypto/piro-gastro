@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
+import { mainCategories } from "@/lib/catalog";
 import Icon from "@/components/Icon";
 import LangSwitch from "@/components/LangSwitch";
 import { pick, t, type Lang } from "@/lib/i18n";
@@ -13,14 +13,7 @@ import { cartDetail } from "@/lib/cart";
  *   3) beyaz kategori ızgarası (.gcats) — 6 sütun, ikonlu
  */
 export default async function SiteHeader({ lang }: { lang: Lang }) {
-  const cats = await db.category.findMany({
-    where: { parentId: null },
-    orderBy: { sort: "asc" },
-    select: {
-      id: true, slug: true, icon: true,
-      nameSv: true, nameEn: true, nameTr: true,
-    },
-  });
+  const cats = mainCategories();
 
   const cart = await cartDetail(lang);
 

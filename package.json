@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "piro-gastro",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
-    "db:import": "node scripts/import-catalog.mjs && node scripts/sync-categories.mjs"
+    "db:import": "node scripts/import-catalog.mjs && node scripts/sync-categories.mjs",
+    "catalog": "node scripts/build-catalog-json.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",

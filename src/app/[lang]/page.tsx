@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
+import { mainCategories, countInCategory, categoryCover, allVisibleProducts } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import Hero from "@/components/Hero";
 import { pick, t, isLang, type Lang } from "@/lib/i18n";
@@ -12,26 +12,8 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
   if (!isLang(lang)) notFound();
   const l = lang as Lang;
 
-  const cats = await db.category.findMany({
-    where: { parentId: null },
-    orderBy: { sort: "asc" },
-    include: {
-      _count: { select: { products: true } },
-      products: {
-        where: { hidden: false, images: { some: {} } },
-        orderBy: { priceCents: "desc" },
-        take: 1,
-        include: { images: { orderBy: { sort: "asc" }, take: 1 } },
-      },
-    },
-  });
-
-  const oneCikan = await db.product.findMany({
-    where: { hidden: false },
-    orderBy: { sold: "desc" },
-    take: 8,
-    include: { images: { orderBy: { sort: "asc" }, take: 1 } },
-  });
+  const cats = mainCategories();
+  const oneCikan = [...allVisibleProducts()].sort((a, b) => b.sold - a.sold).slice(0, 8);
 
   return (
     <>
@@ -44,7 +26,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         </h2>
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {cats.map((c) => {
-            const img = c.image ?? c.products[0]?.images[0]?.url;
+            const img = categoryCover(c.id);
             return (
               <Link
                 key={c.id}
@@ -67,7 +49,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
                     {pick(c, "name", l)}
                   </b>
                   <small className="text-[11.6px] text-steel-700">
-                    {c._count.products} {t("products", l).toLowerCase()}
+                    {countInCategory(c.id)} {t("products", l).toLowerCase()}
                   </small>
                 </div>
               </Link>

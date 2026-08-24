@@ -14,7 +14,7 @@ import "dotenv/config";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
-const CATALOG = path.resolve(__dirname, "../../prototip/assets/catalog.js");
+const CATALOG = path.resolve(__dirname, "../prototip/assets/catalog.js");
 
 // catalog.js tarayıcı için yazılmış: window'a atıyor
 globalThis.window = globalThis.window ?? {};
