@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
+import { db, dbVar } from "@/lib/db";
 import { isLang, type Lang } from "@/lib/i18n";
 import { urunMetniKaydet, ozellikMetniKaydet, kilidiAc } from "@/app/actions/ceviri";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
@@ -28,6 +28,8 @@ export default async function CeviriDuzenle({
   const { lang, sku } = await params;
   if (!isLang(lang)) notFound();
   const l = lang as Lang;
+
+  if (!dbVar) return <VeritabaniGerekli lang={l} sayfa="Çeviri düzenle" />;
 
   let urun, diller;
   try {

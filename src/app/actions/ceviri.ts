@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
+import { db, dbVar } from "@/lib/db";
 
 /**
  * Süper Admin çeviri işlemleri.
@@ -11,6 +11,7 @@ import { db } from "@/lib/db";
  */
 
 export async function urunMetniKaydet(formData: FormData) {
+  if (!dbVar) return;
   const productId = String(formData.get("productId") ?? "");
   const langCode = String(formData.get("langCode") ?? "");
   const name = String(formData.get("name") ?? "").trim();
@@ -31,6 +32,7 @@ export async function urunMetniKaydet(formData: FormData) {
 }
 
 export async function ozellikMetniKaydet(formData: FormData) {
+  if (!dbVar) return;
   const specId = String(formData.get("specId") ?? "");
   const langCode = String(formData.get("langCode") ?? "");
   const label = String(formData.get("label") ?? "").trim();
@@ -48,6 +50,7 @@ export async function ozellikMetniKaydet(formData: FormData) {
 
 /** Kilidi kaldır — otomatik çeviri bu kaydı tekrar güncelleyebilsin. */
 export async function kilidiAc(formData: FormData) {
+  if (!dbVar) return;
   const productId = String(formData.get("productId") ?? "");
   const langCode = String(formData.get("langCode") ?? "");
   if (!productId || !langCode) return;
@@ -61,6 +64,7 @@ export async function kilidiAc(formData: FormData) {
 /* ---------------- DİL YÖNETİMİ ---------------- */
 
 export async function dilEkle(formData: FormData) {
+  if (!dbVar) return;
   const code = String(formData.get("code") ?? "").trim().toLowerCase();
   const name = String(formData.get("name") ?? "").trim();
   const locale = String(formData.get("locale") ?? "").trim() || `${code}-${code.toUpperCase()}`;
@@ -97,6 +101,7 @@ export async function dilEkle(formData: FormData) {
 }
 
 export async function dilDurumu(formData: FormData) {
+  if (!dbVar) return;
   const code = String(formData.get("code") ?? "");
   const enabled = String(formData.get("enabled") ?? "") === "1";
   if (!code) return;

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
+import { db, dbVar } from "@/lib/db";
 import { isLang, type Lang } from "@/lib/i18n";
 import { dilEkle, dilDurumu } from "@/app/actions/ceviri";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
@@ -12,7 +12,9 @@ export default async function DillerPage({ params }: { params: Promise<{ lang: s
   if (!isLang(lang)) notFound();
   const l = lang as Lang;
 
-  // Veritabanı yoksa çökme — ne yapılacağını anlatan ekranı göster.
+  // Veritabanı yoksa hiç bağlanmayı deneme — kurulum ekranını göster.
+  if (!dbVar) return <VeritabaniGerekli lang={l} sayfa="Diller" />;
+
   let diller, urunSayisi;
   try {
     diller = await db.language.findMany({ orderBy: { sort: "asc" } });
