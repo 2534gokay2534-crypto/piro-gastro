@@ -11,17 +11,17 @@ export const dynamic = "force-dynamic";
 const S = {
   sv: {
     title: "Varukorg", empty: "Din varukorg är tom", cont: "Fortsätt handla",
-    sum: "Delsumma", ship: "Frakt", free: "Fri frakt", checkout: "Till kassan",
+    sum: "Delsumma", total: "Att betala", ship: "Frakt", free: "Fri frakt", checkout: "Till kassan",
     remove: "Ta bort", freeHint: (x: string) => `Handla för ${x} till för fri frakt`,
   },
   en: {
     title: "Cart", empty: "Your cart is empty", cont: "Continue shopping",
-    sum: "Subtotal", ship: "Shipping", free: "Free shipping", checkout: "Checkout",
+    sum: "Subtotal", total: "Total", ship: "Shipping", free: "Free shipping", checkout: "Checkout",
     remove: "Remove", freeHint: (x: string) => `Add ${x} more for free shipping`,
   },
   tr: {
     title: "Sepetim", empty: "Sepetiniz boş", cont: "Alışverişe devam et",
-    sum: "Ara toplam", ship: "Kargo", free: "Ücretsiz kargo", checkout: "Ödemeye geç",
+    sum: "Ara toplam", total: "Genel toplam", ship: "Kargo", free: "Ücretsiz kargo", checkout: "Ödemeye geç",
     remove: "Kaldır", freeHint: (x: string) => `Ücretsiz kargo için ${x} daha ekleyin`,
   },
 } as const;
@@ -130,7 +130,7 @@ export default async function CartPage({ params }: { params: Promise<{ lang: str
             </b>
           </div>
           <div className="flex justify-between py-3 text-[18px] font-extrabold text-navy-900">
-            <span>{s.sum}</span>
+            <span>{s.total}</span>
             <span>{money(cart.netCents + kargo, l)}</span>
           </div>
           <p className="text-[11.6px] text-steel-500">{t("exVat", l)}</p>
