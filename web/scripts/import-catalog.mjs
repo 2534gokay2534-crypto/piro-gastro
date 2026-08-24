@@ -8,7 +8,8 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "../src/generated/prisma/client.js";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
+import "dotenv/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -21,10 +22,9 @@ require(CATALOG);
 const cat = globalThis.window.PGC_CATALOG;
 if (!cat) throw new Error("catalog.js okunamadı: " + CATALOG);
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
-const prisma = new PrismaClient({ adapter });
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL tanımlı değil (.env)");
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 /** Türkçe/İsveççe harfleri de doğru çeviren slug üretici */
 const TR = { ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u", å: "a", ä: "a", é: "e", è: "e", â: "a", î: "i", û: "u" };
