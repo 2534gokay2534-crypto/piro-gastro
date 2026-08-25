@@ -18,7 +18,7 @@ export default function AdminKenar({
   sayac,
 }: {
   lang: string;
-  sayac: { siparis: number; sohbet: number; stok: number };
+  sayac: { siparis: number; sohbet: number; stok: number; fatura: number };
 }) {
   const yol = usePathname() ?? "";
   const kok = `/${lang}/admin`;

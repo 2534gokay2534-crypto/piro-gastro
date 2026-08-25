@@ -13,6 +13,7 @@ import {
   tutarlariHesapla,
 } from "@/lib/siparis";
 import { ad, om } from "@/lib/odeme-metin";
+import { db, dbVar } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +32,10 @@ export default async function OdemeTamam({
   searchParams,
 }: {
   params: Promise<{ lang: string }>;
-  searchParams: Promise<{ no?: string; bekliyor?: string }>;
+  searchParams: Promise<{ no?: string; bekliyor?: string; fatura?: string; oturum?: string }>;
 }) {
   const { lang } = await params;
-  const { no, bekliyor } = await searchParams;
+  const { no, bekliyor, fatura } = await searchParams;
   if (!isLang(lang)) notFound();
   const l = lang as Lang;
 
@@ -57,6 +58,25 @@ export default async function OdemeTamam({
 
   const tutar = tutarlariHesapla(satirlar, ozet?.ulke ?? "SE");
   const yontem = ODEME_YONTEMLERI.find((o) => o.kod === ozet?.odeme);
+
+  // Ödeme gerçekten alındı mı? Tek güvenilir kaynak veritabanıdır —
+  // bu sayfaya dönmüş olmak ödeme yapıldığı anlamına gelmez (URL elle açılabilir).
+  let siparisDurum = "";
+  let odenenYontem = "";
+  if (dbVar && numara) {
+    try {
+      const k = await db.order.findUnique({
+        where: { number: numara },
+        select: { status: true, paidMethod: true },
+      });
+      siparisDurum = k?.status ?? "";
+      odenenYontem = k?.paidMethod ?? "";
+    } catch {
+      /* okunamazsa durum bilgisi gösterilmez, akış bozulmaz */
+    }
+  }
+  const odendi = siparisDurum === "paid";
+  const odemeBekliyor = siparisDurum === "pending";
 
   // Veritabanına yazılamadıysa müşteri özeti e-posta ile gönderebilsin
   const konu = `${om("siparisNo", l)} ${numara}`;
@@ -98,6 +118,30 @@ export default async function OdemeTamam({
           </p>
         )}
       </div>
+
+      {odendi && (
+        <p className="mt-4 text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-ok/12 px-3 py-1 text-[12.6px] font-bold text-ok">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 12.5l5.2 5.2L20 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {om("odendi", l)}
+            {odenenYontem ? ` · ${odenenYontem.replace("_", " ")}` : ""}
+          </span>
+        </p>
+      )}
+
+      {odemeBekliyor && (
+        <p className="mt-4 rounded-[10px] border border-warn/40 bg-warn/10 p-4 text-[13.2px] leading-relaxed text-navy-900">
+          {om("odemeBekliyor", l)}
+        </p>
+      )}
+
+      {fatura === "1" && (
+        <p className="mt-4 rounded-[10px] border border-steel-200 bg-steel-50 p-4 text-[13.2px] leading-relaxed text-navy-900">
+          {om("faturaSiparis", l)}
+        </p>
+      )}
 
       {bekliyor === "1" ? (
         <div className="mt-6 rounded-[10px] border border-warn/40 bg-warn/10 p-4">

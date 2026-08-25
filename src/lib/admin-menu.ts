@@ -8,7 +8,7 @@
 export type MenuOge = {
   yol: string; // /admin altındaki yol
   ad: string;
-  rozet?: "siparis" | "sohbet" | "stok"; // canlı sayaç anahtarı
+  rozet?: "siparis" | "sohbet" | "stok" | "fatura"; // canlı sayaç anahtarı
   yetki: string; // Roller ekranındaki yetki anahtarı
 };
 
@@ -25,6 +25,7 @@ export const MENU: MenuGrup[] = [
       { yol: "/siparisler", ad: "Siparişler", rozet: "siparis", yetki: "siparis" },
       { yol: "/musteriler", ad: "Müşteriler", yetki: "musteri" },
       { yol: "/kampanyalar", ad: "Kampanyalar ve Kuponlar", yetki: "kampanya" },
+      { yol: "/fatura-basvurulari", ad: "Kurumsal Fatura Başvuruları", rozet: "fatura", yetki: "fatura" },
     ],
   },
   {
@@ -69,6 +70,7 @@ export const YETKILER: Array<{ anahtar: string; ad: string }> = [
   { anahtar: "siparis", ad: "Siparişler" },
   { anahtar: "musteri", ad: "Müşteriler" },
   { anahtar: "kampanya", ad: "Kampanya ve kuponlar" },
+  { anahtar: "fatura", ad: "Kurumsal fatura başvuruları" },
   { anahtar: "urun", ad: "Ürün yönetimi" },
   { anahtar: "kategori", ad: "Kategori yönetimi" },
   { anahtar: "stok", ad: "Stok yönetimi" },

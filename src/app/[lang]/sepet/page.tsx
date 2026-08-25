@@ -99,7 +99,7 @@ export default async function CartPage({ params }: { params: Promise<{ lang: str
                   min={0}
                   max={999}
                   defaultValue={qty}
-                  className="w-[74px] rounded border border-steel-300 px-2 py-1.5 text-right text-[14px] outline-none focus:border-gold"
+                  className="w-[74px] rounded border border-steel-300 px-2 py-1.5 text-right text-[16px] outline-none focus:border-gold sm:text-[14px]"
                 />
                 <button
                   type="submit"

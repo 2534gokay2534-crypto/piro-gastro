@@ -223,6 +223,33 @@ export async function GET(req: Request) {
       }
 
       /* ---------------- KUPONLAR ---------------- */
+      case "faturaBasvuru": {
+        const liste = await db.invoiceApplication.findMany({
+          orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+          take: LIMIT,
+        });
+        const durumAdi: Record<string, string> = {
+          pending: "Bekliyor", approved: "Onaylı", rejected: "Reddedildi",
+        };
+        return indir(
+          "fatura-basvurulari",
+          csvYap(
+            ["Firma", "Org.nr", "KDV no", "Yetkili", "E-posta", "Telefon",
+             "Fatura adresi", "Posta kodu", "Şehir", "Ülke", "Durum",
+             "Kredi limiti", "Karar veren", "Karar tarihi", "Gerekçe", "Başvuru tarihi", "Not"],
+            liste.map((b) => [
+              b.company, b.orgNr, b.vatNr ?? "", b.contact, b.email, b.phone,
+              b.billAddr, b.billZip, b.billCity, b.country,
+              durumAdi[b.status] ?? b.status,
+              b.creditLimitCents ? csvPara(b.creditLimitCents) : "sınırsız",
+              b.decidedBy ?? "", b.decidedAt?.toISOString().slice(0, 16).replace("T", " ") ?? "",
+              b.decision ?? "", b.createdAt.toISOString().slice(0, 16).replace("T", " "),
+              b.note ?? "",
+            ]),
+          ),
+        );
+      }
+
       case "kuponlar": {
         const liste = await db.coupon.findMany({ orderBy: { createdAt: "desc" }, take: LIMIT });
         return indir(

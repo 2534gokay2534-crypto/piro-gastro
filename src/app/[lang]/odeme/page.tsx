@@ -4,9 +4,10 @@ import type { Metadata } from "next";
 import { cartDetail } from "@/lib/cart";
 import { pick, t, isLang, type Lang } from "@/lib/i18n";
 import { money } from "@/lib/money";
-import { ODEME_YONTEMLERI, ULKELER, tutarlariHesapla } from "@/lib/siparis";
+import { ULKELER, tutarlariHesapla } from "@/lib/siparis";
+import { ROZETLER, stripeVar } from "@/lib/odeme-saglayici";
 import { ad, om } from "@/lib/odeme-metin";
-import { siparisOlustur } from "@/app/actions/siparis";
+import { faturaAcikMi, odemeBaslat } from "@/app/actions/odeme";
 import Icon from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +24,10 @@ export async function generateMetadata({
 }
 
 const girdi =
-  "w-full rounded-[8px] border border-steel-300 px-3 py-2.5 text-[14px] outline-none focus:border-navy-500";
-const girdiHata = "w-full rounded-[8px] border border-danger px-3 py-2.5 text-[14px] outline-none";
+  // Mobilde 16px: iOS Safari daha küçük yazıda alana odaklanınca sayfayı yakınlaştırır.
+  "w-full rounded-[8px] border border-steel-300 px-3 py-2.5 text-[16px] outline-none focus:border-navy-500 sm:text-[14px]";
+const girdiHata =
+  "w-full rounded-[8px] border border-danger px-3 py-2.5 text-[16px] outline-none sm:text-[14px]";
 
 function Alan({
   etiket,
@@ -108,6 +111,10 @@ export default async function OdemePage({
   const ulke = (sp.ulke ?? "SE").toUpperCase();
   const tutar = tutarlariHesapla(sepet.lines, ulke);
 
+  // Fatura seçeneği yalnızca onaylı başvurusu olan firmaya gösterilir.
+  // Formda org.nr + e-posta doluysa kontrol edilir; boşsa gösterilmez.
+  const faturaAcik = await faturaAcikMi(sp.vergiNo ?? "", sp.eposta ?? "");
+
   return (
     <div className="mx-auto max-w-[1320px] px-[30px] py-8">
       <nav className="text-[12.4px] text-steel-500">
@@ -121,13 +128,31 @@ export default async function OdemePage({
       <h1 className="mt-3 text-[30px] font-extrabold tracking-tight text-navy-900">{om("baslik", l)}</h1>
       <p className="mt-1 text-[14px] text-steel-700">{om("altBaslik", l)}</p>
 
-      {hataliAlanlar.size > 0 && (
-        <p className="mt-4 rounded-[9px] bg-danger/10 px-4 py-2.5 text-[13px] font-semibold text-danger">
-          {om("formHata", l)}
+      {!stripeVar && !faturaAcik && (
+        <p className="mt-4 rounded-[9px] border border-warn/40 bg-warn/10 px-4 py-2.5 text-[13px] font-semibold text-warn">
+          {om("odemeKapali", l)}
         </p>
       )}
 
-      <form action={siparisOlustur} className="mt-6 grid gap-8 lg:grid-cols-[1fr_360px]">
+      {sp.iptal === "1" && (
+        <p className="mt-4 rounded-[9px] bg-warn/10 px-4 py-2.5 text-[13px] font-semibold text-warn">
+          {om("odemeIptal", l)}
+        </p>
+      )}
+
+      {sp.hata === "sistem" && (
+        <p className="mt-4 rounded-[9px] bg-danger/10 px-4 py-2.5 text-[13px] font-semibold text-danger">
+          {om("sistemHata", l)}
+        </p>
+      )}
+
+      {hataliAlanlar.size > 0 && sp.hata !== "sistem" && (
+        <p className="mt-4 rounded-[9px] bg-danger/10 px-4 py-2.5 text-[13px] font-semibold text-danger">
+          {sp.faturaYok === "1" ? om("faturaYetkiYok", l) : om("formHata", l)}
+        </p>
+      )}
+
+      <form action={odemeBaslat} className="mt-6 grid gap-8 lg:grid-cols-[1fr_360px]">
         <input type="hidden" name="dil" value={l} />
 
         {/* ---------------- form ---------------- */}
@@ -166,29 +191,73 @@ export default async function OdemePage({
 
           <section className="rounded-[10px] border border-steel-200 p-5">
             <h2 className="text-[15px] font-extrabold text-navy-900">{om("odemeBolum", l)}</h2>
-            <div className="mt-3 space-y-2.5">
-              {ODEME_YONTEMLERI.map((o, i) => (
-                <label
-                  key={o.kod}
-                  className="flex cursor-pointer gap-3 rounded-[9px] border border-steel-200 p-3.5 hover:border-gold has-checked:border-gold has-checked:bg-gold-200/20"
+
+            {/* Kart / Swish / Klarna — Stripe Checkout üzerinden.
+                Apple Pay ve Google Pay uygun cihazlarda kart seçeneği
+                içinde kendiliğinden görünür, ayrı satır gerektirmez. */}
+            <label
+              className={
+                "mt-3 flex gap-3 rounded-[9px] border p-3.5 " +
+                (stripeVar
+                  ? "cursor-pointer border-steel-200 hover:border-gold has-checked:border-gold has-checked:bg-gold-200/20"
+                  : "cursor-not-allowed border-steel-200 bg-steel-50 opacity-60")
+              }
+            >
+              <input
+                type="radio"
+                name="odeme"
+                value="card"
+                defaultChecked={stripeVar}
+                disabled={!stripeVar}
+                className="mt-0.5 h-4 w-4 accent-navy-700"
+              />
+              <span className="min-w-0 flex-1">
+                <b className="block text-[13.6px] text-navy-900">{om("guvenliOdeme", l)}</b>
+                <span className="mt-1.5 flex flex-wrap gap-1.5">
+                  {ROZETLER.map((r) => (
+                    <span
+                      key={r.kod}
+                      className="rounded border border-steel-200 bg-steel-50 px-2 py-0.5 text-[11.4px] font-semibold text-steel-700"
+                    >
+                      {r.ad}
+                    </span>
+                  ))}
+                </span>
+                <span className="mt-1.5 block text-[12.2px] leading-relaxed text-steel-600">
+                  {stripeVar ? `${om("saglayiciMetin", l)} ${om("sekBilgi", l)}` : om("odemeKapali", l)}
+                </span>
+              </span>
+            </label>
+
+            {/* Fatura — yalnızca onaylı başvurusu olan firmaya açılır. */}
+            {faturaAcik ? (
+              <label className="mt-2.5 flex cursor-pointer gap-3 rounded-[9px] border border-ok/40 bg-ok/5 p-3.5 hover:border-gold has-checked:border-gold has-checked:bg-gold-200/20">
+                <input type="radio" name="odeme" value="invoice" className="mt-0.5 h-4 w-4 accent-navy-700" />
+                <span>
+                  <b className="block text-[13.6px] text-navy-900">{om("faturaBaslik", l)}</b>
+                  <span className="block text-[12.4px] text-ok">{om("faturaAcik", l)}</span>
+                </span>
+              </label>
+            ) : (
+              <div className="mt-2.5 rounded-[9px] border border-steel-200 bg-steel-50 p-3.5">
+                <b className="block text-[13.4px] text-navy-900">{om("faturaBaslik", l)}</b>
+                <span className="mt-0.5 block text-[12.4px] leading-relaxed text-steel-600">
+                  {om("faturaKapali", l)}
+                </span>
+                <Link
+                  href={`/${l}/fatura-basvuru`}
+                  className="mt-2 inline-flex text-[12.6px] font-bold text-navy-700 underline-offset-2 hover:text-gold hover:underline"
                 >
-                  <input
-                    type="radio"
-                    name="odeme"
-                    value={o.kod}
-                    defaultChecked={eski("odeme") ? eski("odeme") === o.kod : i === 0}
-                    className="mt-0.5 h-4 w-4 accent-navy-700"
-                  />
-                  <span>
-                    <b className="block text-[13.6px] text-navy-900">{ad(o.ad, l)}</b>
-                    <span className="block text-[12.4px] text-steel-600">{ad(o.aciklama, l)}</span>
-                  </span>
-                </label>
-              ))}
-              {h("odeme") && (
-                <span className="block text-[11.8px] font-semibold text-danger">{om("secimHata", l)}</span>
-              )}
-            </div>
+                  {om("faturaBasvur", l)} →
+                </Link>
+              </div>
+            )}
+
+            {h("odeme") && (
+              <span className="mt-2 block text-[11.8px] font-semibold text-danger">
+                {sp.faturaYok === "1" ? om("faturaYetkiYok", l) : om("secimHata", l)}
+              </span>
+            )}
 
             <label className="mt-4 block">
               <span className="block text-[12px] font-bold text-navy-900">{om("not", l)}</span>
@@ -263,11 +332,14 @@ export default async function OdemePage({
 
           <button
             type="submit"
-            className="mt-4 w-full cursor-pointer rounded-md bg-gold px-6 py-3.5 text-[15px] font-bold text-navy-950 transition hover:bg-gold-400"
+            disabled={!stripeVar && !faturaAcik}
+            className="mt-4 w-full cursor-pointer rounded-md bg-gold px-6 py-3.5 text-[15px] font-bold text-navy-950 transition hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-45"
           >
-            {om("gonder", l)}
+            {om("odemeyeGec", l)}
           </button>
-          <p className="mt-2 text-[11.6px] leading-relaxed text-steel-500">{om("kosul", l)}</p>
+          <p className="mt-2 text-[11.6px] leading-relaxed text-steel-500">
+            {stripeVar ? om("saglayiciMetin", l) : om("kosul", l)}
+          </p>
 
           <Link
             href={`/${l}/sepet`}

@@ -94,6 +94,111 @@ const M: Record<string, Record<string, string>> = {
   epostaGonder: { sv: "Skicka via e-post", en: "Send by e-mail", tr: "E-posta ile gönder", de: "Per E-Mail senden" },
   yazdir: { sv: "Skriv ut", en: "Print", tr: "Yazdır", de: "Drucken" },
   devamEt: { sv: "Fortsätt handla", en: "Continue shopping", tr: "Alışverişe devam et", de: "Weiter einkaufen" },
+  /* --- ödeme sağlayıcı --- */
+  guvenliOdeme: { sv: "Säker betalning", en: "Secure payment", tr: "Güvenli ödeme", de: "Sichere Zahlung" },
+  saglayiciMetin: {
+    sv: "Du betalar hos Stripe. Kortuppgifter når aldrig våra servrar.",
+    en: "You pay via Stripe. Card details never reach our servers.",
+    tr: "Ödemeyi Stripe üzerinden yaparsınız. Kart bilgileri sunucularımıza hiç ulaşmaz.",
+    de: "Sie zahlen über Stripe. Kartendaten erreichen unsere Server nie.",
+  },
+  odemeKapali: {
+    sv: "Kortbetalning är tillfälligt stängd. Kontakta oss så hjälper vi dig med ordern.",
+    en: "Card payment is temporarily unavailable. Contact us and we will help you with the order.",
+    tr: "Kartlı ödeme geçici olarak kapalı. Bize ulaşın, siparişinizde yardımcı olalım.",
+    de: "Kartenzahlung ist vorübergehend nicht verfügbar. Kontaktieren Sie uns, wir helfen bei der Bestellung.",
+  },
+  odemeyeGec: { sv: "Gå till betalning", en: "Go to payment", tr: "Ödemeye geç", de: "Zur Zahlung" },
+  sekBilgi: {
+    sv: "Betalningen dras i SEK.",
+    en: "Payment is charged in SEK.",
+    tr: "Tahsilat SEK üzerinden yapılır.",
+    de: "Die Zahlung erfolgt in SEK.",
+  },
+
+  /* --- kurumsal fatura --- */
+  faturaBaslik: { sv: "Faktura för företag", en: "Invoice for businesses", tr: "Kurumsal fatura", de: "Rechnung für Firmen" },
+  faturaKapali: {
+    sv: "Fakturabetalning öppnas efter godkänd ansökan.",
+    en: "Invoice payment is enabled after an approved application.",
+    tr: "Fatura ile ödeme, başvurunuz onaylandıktan sonra açılır.",
+    de: "Rechnungskauf wird nach genehmigtem Antrag freigeschaltet.",
+  },
+  faturaBasvur: { sv: "Ansök om fakturabetalning", en: "Apply for invoice payment", tr: "Fatura ile ödeme başvurusu", de: "Rechnungskauf beantragen" },
+  faturaAcik: {
+    sv: "Fakturabetalning är godkänd för ditt företag.",
+    en: "Invoice payment is approved for your company.",
+    tr: "Firmanız için fatura ile ödeme onaylı.",
+    de: "Rechnungskauf ist für Ihr Unternehmen freigegeben.",
+  },
+  faturaYetkiYok: {
+    sv: "Fakturabetalning är inte godkänd för de uppgifter du angav.",
+    en: "Invoice payment is not approved for the details you entered.",
+    tr: "Girdiğiniz bilgiler için fatura ile ödeme onaylı değil.",
+    de: "Rechnungskauf ist für die angegebenen Daten nicht freigegeben.",
+  },
+  faturaKontrol: { sv: "Kontrollera", en: "Check", tr: "Kontrol et", de: "Prüfen" },
+
+  /* --- başvuru formu --- */
+  bvBaslik: { sv: "Ansökan om fakturabetalning", en: "Invoice payment application", tr: "Fatura ile ödeme başvurusu", de: "Antrag auf Rechnungskauf" },
+  bvOzet: {
+    sv: "Fyll i företagsuppgifterna. Vi gör en kreditkontroll och återkommer via e-post.",
+    en: "Fill in your company details. We run a credit check and reply by e-mail.",
+    tr: "Firma bilgilerinizi girin. Kredi kontrolü yapıp e-posta ile döneceğiz.",
+    de: "Bitte Firmendaten ausfüllen. Wir prüfen die Bonität und melden uns per E-Mail.",
+  },
+  bvSirket: { sv: "Företagsnamn", en: "Company name", tr: "Şirket adı", de: "Firmenname" },
+  bvOrgNr: { sv: "Organisationsnummer", en: "Company reg. no.", tr: "Organizasyon numarası", de: "Handelsregisternummer" },
+  bvVatNr: { sv: "Momsregistreringsnummer", en: "VAT number", tr: "KDV numarası", de: "USt-IdNr." },
+  bvYetkili: { sv: "Behörig person", en: "Authorised person", tr: "Yetkili kişi", de: "Bevollmächtigte Person" },
+  bvFaturaAdres: { sv: "Fakturaadress", en: "Billing address", tr: "Fatura adresi", de: "Rechnungsadresse" },
+  bvGonder: { sv: "Skicka ansökan", en: "Submit application", tr: "Başvuruyu gönder", de: "Antrag senden" },
+  bvOrgNrHata: {
+    sv: "Ange 10 siffror, t.ex. 556677-8899",
+    en: "Enter 10 digits, e.g. 556677-8899",
+    tr: "10 hane girin, örn. 556677-8899",
+    de: "10 Ziffern eingeben, z. B. 556677-8899",
+  },
+  bvAlindi: { sv: "Ansökan mottagen", en: "Application received", tr: "Başvurunuz alındı", de: "Antrag erhalten" },
+  bvAlindiMetin: {
+    sv: "Vi granskar ansökan och svarar via e-post. Under tiden kan du betala med kort, Swish eller Klarna.",
+    en: "We are reviewing your application and will reply by e-mail. Meanwhile you can pay by card, Swish or Klarna.",
+    tr: "Başvurunuzu inceleyip e-posta ile döneceğiz. Bu arada kart, Swish veya Klarna ile ödeyebilirsiniz.",
+    de: "Wir prüfen Ihren Antrag und antworten per E-Mail. In der Zwischenzeit können Sie per Karte, Swish oder Klarna zahlen.",
+  },
+  bvZatenVar: {
+    sv: "Det finns redan en ansökan för det här organisationsnumret.",
+    en: "An application already exists for this company registration number.",
+    tr: "Bu organizasyon numarası için zaten bir başvuru var.",
+    de: "Für diese Registernummer liegt bereits ein Antrag vor.",
+  },
+
+  /* --- hata durumları --- */
+  odemeIptal: {
+    sv: "Betalningen avbröts. Varukorgen är kvar.",
+    en: "Payment was cancelled. Your cart is intact.",
+    tr: "Ödeme iptal edildi. Sepetiniz duruyor.",
+    de: "Die Zahlung wurde abgebrochen. Ihr Warenkorb bleibt erhalten.",
+  },
+  sistemHata: {
+    sv: "Betalningen kunde inte startas just nu. Försök igen eller kontakta oss.",
+    en: "Payment could not be started right now. Please try again or contact us.",
+    tr: "Ödeme şu anda başlatılamadı. Tekrar deneyin veya bize ulaşın.",
+    de: "Die Zahlung konnte gerade nicht gestartet werden. Bitte erneut versuchen oder uns kontaktieren.",
+  },
+  odemeBekliyor: {
+    sv: "Vi väntar på betalningsbekräftelse. Du får ett mejl så snart den är klar.",
+    en: "We are waiting for payment confirmation. You will get an e-mail as soon as it clears.",
+    tr: "Ödeme onayını bekliyoruz. Onaylanır onaylanmaz e-posta göndereceğiz.",
+    de: "Wir warten auf die Zahlungsbestätigung. Sie erhalten eine E-Mail, sobald sie vorliegt.",
+  },
+  odendi: { sv: "Betald", en: "Paid", tr: "Ödendi", de: "Bezahlt" },
+  faturaSiparis: {
+    sv: "Fakturan skickas med orderbekräftelsen.",
+    en: "The invoice will be sent with the order confirmation.",
+    tr: "Fatura, sipariş onayıyla birlikte gönderilecek.",
+    de: "Die Rechnung wird mit der Auftragsbestätigung versendet.",
+  },
 };
 
 export function om(anahtar: string, dil: string): string {

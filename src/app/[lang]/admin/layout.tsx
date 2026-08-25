@@ -14,16 +14,17 @@ export const dynamic = "force-dynamic";
  */
 
 async function sayaclariGetir() {
-  if (!dbVar) return { siparis: 0, sohbet: 0, stok: 0 };
+  if (!dbVar) return { siparis: 0, sohbet: 0, stok: 0, fatura: 0 };
   try {
-    const [siparis, sohbet, stok] = await Promise.all([
+    const [siparis, sohbet, stok, fatura] = await Promise.all([
       db.order.count({ where: { status: "new" } }),
       db.chatSession.count({ where: { status: "open" } }),
       db.product.count({ where: { hidden: false, onRequest: false, stock: { lte: 0 } } }),
+      db.invoiceApplication.count({ where: { status: "pending" } }),
     ]);
-    return { siparis, sohbet, stok };
+    return { siparis, sohbet, stok, fatura };
   } catch {
-    return { siparis: 0, sohbet: 0, stok: 0 };
+    return { siparis: 0, sohbet: 0, stok: 0, fatura: 0 };
   }
 }
 

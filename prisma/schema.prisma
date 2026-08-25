@@ -357,6 +357,12 @@ model Order {
   couponCode String?
   note       String?
 
+  /// Ödeme sağlayıcı izleri (Stripe oturumu / ödeme niyeti)
+  provider    String? // stripe
+  providerRef String? // cs_... oturum kimliği
+  paymentRef  String? // pi_... ödeme kimliği
+  paidMethod  String? // card | swish | klarna | apple_pay | google_pay
+
   shipName String?
   shipAddr String?
   shipZip  String?
@@ -372,6 +378,7 @@ model Order {
 
   @@index([status, createdAt])
   @@index([customerId])
+  @@index([providerRef])
   @@index([createdAt])
 }
 
@@ -530,4 +537,41 @@ model Backup {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// Kurumsal fatura ile ödeme başvurusu.
+/// Başvuru gelir, Süper Admin onaylayana kadar o firma fatura ile ödeyemez.
+model InvoiceApplication {
+  id String @id @default(cuid())
+
+  company String
+  orgNr   String
+  vatNr   String?
+
+  contact String // yetkili kişi
+  email   String
+  phone   String
+
+  billAddr String
+  billZip  String
+  billCity String
+  country  String @default("SE")
+
+  note String?
+
+  /// pending | approved | rejected
+  status    String    @default("pending")
+  decidedBy String?
+  decidedAt DateTime?
+  decision  String? // onay/red gerekçesi
+
+  /// Onaylıysa bu limite kadar faturalı sipariş verilebilir (cent, 0 = sınırsız)
+  creditLimitCents Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([status, createdAt])
+  @@index([orgNr])
+  @@index([email])
 }

@@ -27,30 +27,36 @@ export const ULKELER = [
 export const ULKE_KODLARI: string[] = ULKELER.map((u) => u.kod);
 
 /**
- * Ödeme yöntemleri.
- * Order.payMethod alanı card | invoice | swish | bank | cash kabul eder;
- * kart ve Swish gerçek bir ödeme sağlayıcısı gerektirdiği için burada
- * SUNULMAZ — olmayan bir altyapı varmış gibi gösterilmez.
+ * Formdan gelebilecek ödeme yöntemleri.
+ *
+ *   card    → Stripe Checkout. Swish, Klarna, Visa, Mastercard, AMEX,
+ *             Apple Pay ve Google Pay bunun altında toplanır; hangisinin
+ *             kullanıldığını Stripe seçtirir ve webhook bize bildirir.
+ *   invoice → Kurumsal fatura. YALNIZCA onaylı başvurusu olan firmaya
+ *             açılır; sunucuda ayrıca doğrulanır.
+ *
+ * Formda "swish" veya "klarna" seçtirilmez — o seçim Stripe ekranında
+ * yapılır, burada kabul edilseydi yanlış kayıt oluşurdu.
  */
 export const ODEME_YONTEMLERI = [
+  {
+    kod: "card",
+    ad: { sv: "Kort, Swish eller Klarna", en: "Card, Swish or Klarna", tr: "Kart, Swish veya Klarna", de: "Karte, Swish oder Klarna" },
+    aciklama: {
+      sv: "Betalas säkert hos Stripe.",
+      en: "Paid securely via Stripe.",
+      tr: "Stripe üzerinden güvenle ödenir.",
+      de: "Sichere Zahlung über Stripe.",
+    },
+  },
   {
     kod: "invoice",
     ad: { sv: "Faktura", en: "Invoice", tr: "Fatura", de: "Rechnung" },
     aciklama: {
-      sv: "30 dagar netto efter kreditkontroll.",
-      en: "30 days net after credit check.",
-      tr: "Kredi kontrolünden sonra 30 gün vadeli.",
-      de: "30 Tage netto nach Bonitätsprüfung.",
-    },
-  },
-  {
-    kod: "bank",
-    ad: { sv: "Förskottsbetalning", en: "Bank transfer", tr: "Havale / EFT", de: "Vorkasse" },
-    aciklama: {
-      sv: "Vi skickar betalningsuppgifter med orderbekräftelsen.",
-      en: "We send payment details with the order confirmation.",
-      tr: "Ödeme bilgilerini sipariş onayıyla göndeririz.",
-      de: "Zahlungsdetails senden wir mit der Auftragsbestätigung.",
+      sv: "30 dagar netto — kräver godkänd ansökan.",
+      en: "30 days net — requires an approved application.",
+      tr: "30 gün vadeli — onaylı başvuru gerektirir.",
+      de: "30 Tage netto — genehmigter Antrag erforderlich.",
     },
   },
 ] as const;
