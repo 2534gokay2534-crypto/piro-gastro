@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
 import ChatWidget from "@/components/ChatWidget";
+import StorefrontChrome from "@/components/StorefrontChrome";
 import { LANGS, isLang, t, type Lang } from "@/lib/i18n";
 
 export function generateStaticParams() {
@@ -21,9 +22,14 @@ export default async function LangLayout({
   return (
     <html lang={l}>
       <body>
-        <SiteHeader lang={l} />
+        {/* Mağaza başlığı — /admin altında gizlenir */}
+        <StorefrontChrome>
+          <SiteHeader lang={l} />
+        </StorefrontChrome>
+
         <main className="min-h-[60vh]">{children}</main>
 
+        <StorefrontChrome>
         <footer className="mt-20 bg-navy-950 text-steel-400">
           <div className="mx-auto max-w-[1320px] px-5 py-12">
             <div className="flex items-center gap-3">
@@ -42,6 +48,7 @@ export default async function LangLayout({
             </p>
           </div>
         </footer>
+        </StorefrontChrome>
 
         {/* Canlı sohbet — sayfa akışının dışında (position: fixed),
             mevcut düzeni ve SEO'yu etkilemez. */}

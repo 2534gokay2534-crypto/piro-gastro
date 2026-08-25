@@ -115,6 +115,10 @@ model Product {
 
   sold Int @default(0)
 
+  /// Alış maliyeti — kâr/zarar hesabı için (kuruş)
+  costCents  Int     @default(0)
+  supplierId String?
+
   // ölçüler (mm)
   dimW     Int?
   dimD     Int?
@@ -271,8 +275,8 @@ model ChatSession {
   phone       String?
   lang        String    @default("sv")
   page        String?
-  status      String    @default("open")   // open | closed
-  mode        String    @default("live")   // live | offline
+  status      String    @default("open") // open | closed
+  mode        String    @default("live") // live | offline
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now())
   agentSeenAt DateTime?
@@ -293,4 +297,237 @@ model ChatMessage {
   session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, createdAt])
+}
+
+// ===============================================================
+// SÜPER ADMIN — TİCARİ MODELLER
+// Katalog tabloları (Product, Category, Brand) DEĞİŞTİRİLMEDİ.
+// Buradaki tablolar yalnızca yönetim paneli için eklendi; mağaza
+// tarafı bunlara bağlı değildir.
+// ===============================================================
+
+model Customer {
+  id      String  @id @default(cuid())
+  name    String
+  email   String?
+  phone   String?
+  company String?
+  orgNr   String? // Org.nr / vergi no
+  vatNr   String?
+
+  address String?
+  zip     String?
+  city    String?
+  country String  @default("SE")
+
+  /// retail | business
+  type  String  @default("business")
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  orders Order[]
+
+  @@index([email])
+  @@index([name])
+}
+
+model Order {
+  id     String @id @default(cuid())
+  number String @unique // PG-2026-0001
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  /// new | paid | packing | shipped | delivered | cancelled | refunded
+  status    String @default("new")
+  /// card | invoice | swish | bank | cash
+  payMethod String @default("invoice")
+
+  currency String @default("SEK")
+
+  subtotalCents Int @default(0)
+  vatCents      Int @default(0)
+  shipCents     Int @default(0)
+  discountCents Int @default(0)
+  totalCents    Int @default(0)
+  costCents     Int @default(0) // maliyet — kâr hesabı için
+
+  couponCode String?
+  note       String?
+
+  shipName String?
+  shipAddr String?
+  shipZip  String?
+  shipCity String?
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now())
+  paidAt     DateTime?
+  shippedAt  DateTime?
+  refundedAt DateTime?
+
+  items OrderItem[]
+
+  @@index([status, createdAt])
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String?
+  sku       String
+  name      String
+
+  qty            Int @default(1)
+  unitPriceCents Int @default(0)
+  unitCostCents  Int @default(0)
+  vatRate        Int @default(25) // %
+  lineTotalCents Int @default(0)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Supplier {
+  id      String  @id @default(cuid())
+  name    String
+  contact String?
+  email   String?
+  phone   String?
+  country String  @default("SE")
+  address String?
+  notes   String?
+
+  /// Ortalama tedarik süresi (gün)
+  leadDays Int @default(14)
+
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([name])
+}
+
+model Coupon {
+  id   String @id @default(cuid())
+  code String @unique
+
+  /// percent | amount
+  kind  String @default("percent")
+  value Int    @default(0) // % veya kuruş
+
+  minTotalCents Int @default(0)
+  usageLimit    Int @default(0) // 0 = sınırsız
+  usedCount     Int @default(0)
+
+  startsAt DateTime?
+  endsAt   DateTime?
+  active   Boolean   @default(true)
+
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([active])
+}
+
+model StockMovement {
+  id        String @id @default(cuid())
+  productId String
+  sku       String
+
+  delta  Int // + giriş, − çıkış
+  before Int @default(0)
+  after  Int @default(0)
+
+  /// sale | purchase | correction | return | import
+  reason String  @default("correction")
+  note   String?
+  actor  String  @default("super-admin")
+
+  createdAt DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([createdAt])
+}
+
+model Expense {
+  id String @id @default(cuid())
+
+  /// income | expense
+  kind     String @default("expense")
+  /// kira, maaş, nakliye, reklam, satış…
+  category String @default("genel")
+
+  description String
+  amountCents Int    @default(0)
+  vatCents    Int    @default(0)
+  currency    String @default("SEK")
+
+  /// card | invoice | swish | bank | cash
+  method String @default("bank")
+
+  supplierId String?
+  date       DateTime @default(now())
+  note       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([kind, date])
+  @@index([date])
+}
+
+model AdminUser {
+  id    String  @id @default(cuid())
+  email String  @unique
+  name  String
+  phone String?
+
+  /// Basit özet (sha256). Giriş kapısı ADMIN_SIFRE ile çalışır;
+  /// bu alan ileride tam oturum sistemi için hazır bekler.
+  passHash String?
+
+  roleId String?
+  role   Role?   @relation(fields: [roleId], references: [id])
+
+  active      Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([roleId])
+}
+
+model Role {
+  id   String @id @default(cuid())
+  name String @unique
+
+  /// Yetki anahtarları, virgülle ayrılmış: "urun.duzenle,siparis.gor"
+  perms String @default("")
+
+  note      String?
+  createdAt DateTime @default(now())
+
+  users AdminUser[]
+}
+
+model Backup {
+  id    String @id @default(cuid())
+  label String
+
+  /// katalog | tam
+  kind String @default("katalog")
+
+  products Int @default(0)
+  orders   Int @default(0)
+  bytes    Int @default(0)
+
+  actor     String   @default("super-admin")
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
