@@ -129,6 +129,15 @@ export default async function Muhasebe({
       }
     >
       {/* --- ana rakamlar --- */}
+      <p className="mb-3 rounded-[9px] border border-steel-200 bg-steel-50 px-4 py-2.5 text-[12.8px] leading-relaxed text-steel-700">
+        Ödenmiş her sipariş bu sayfadaki ciro, KDV ve kâr hesabına kendiliğinden
+        girer. Belgelerin kendisi{" "}
+        <Link href={`/${lang}/admin/makbuzlar`} className="font-bold text-navy-700 hover:text-gold">
+          Sipariş Makbuzları ve Belgeler
+        </Link>{" "}
+        bölümünde; oradan yazdırabilir veya PDF indirebilirsiniz.
+      </p>
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Kart etiket="Ciro (KDV dahil)" deger={para(ciro, false)} alt={`${sayi(satis._count._all)} sipariş`} renk="ok" />
         <Kart etiket="Net satış (KDV hariç)" deger={para(ciro - kdvTahsil, false)} renk="navy" />

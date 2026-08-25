@@ -55,3 +55,38 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* ------------------------------------------------------------------
+   YAZDIRMA — makbuz / fatura
+   Belge sayfası yazdırılırken mağaza başlığı, altbilgi, sohbet ve
+   butonlar gizlenir; kâğıda yalnızca belgenin kendisi çıkar.
+   ------------------------------------------------------------------ */
+@media print {
+  .yazdirma-gizle {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  main {
+    min-height: 0 !important;
+  }
+
+  /* Renkli başlık ve rozetler kâğıtta da görünsün */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Belge sayfa sonunda ikiye bölünmesin */
+  article {
+    break-inside: avoid;
+  }
+
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}

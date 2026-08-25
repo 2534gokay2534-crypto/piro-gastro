@@ -9,6 +9,7 @@ import { langDef, pick } from "@/lib/i18n";
 import { SON_SIPARIS_COOKIE, formuDogrula, formuOku, siparisNo, tutarlariHesapla } from "@/lib/siparis";
 import { ODEME_PARA, eurCentToOre, stripe, stripeVar, yontemler } from "@/lib/odeme-saglayici";
 import { orgNrSade } from "@/lib/fatura-basvuru";
+import { MUSTERI_CEREZ, MUSTERI_SURE_MS, oturumUret } from "@/lib/musteri-oturum";
 
 /**
  * ÖDEME BAŞLATMA
@@ -140,6 +141,18 @@ export async function odemeBaslat(veri: FormData): Promise<void> {
     })
     .catch(() => null);
 
+
+  // "Siparişlerim" ve makbuzlar bu tarayıcıda kendiliğinden açılsın diye
+  // imzalı müşteri oturumu bırakılır (parola yok, imza sunucudan).
+  const musteriCerezi = await oturumUret(form.eposta, simdi.getTime());
+  const musteriCerezAyari = {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: Math.floor(MUSTERI_SURE_MS / 1000),
+  };
+
   const ozet = JSON.stringify({
     no: numara, ulke: form.ulke, odeme: faturali ? "invoice" : "card",
     firma: form.firma, eposta: form.eposta,
@@ -151,6 +164,7 @@ export async function odemeBaslat(veri: FormData): Promise<void> {
     const kutu = await cookies();
     kutu.delete(CART_COOKIE);
     kutu.set(SON_SIPARIS_COOKIE, ozet, { maxAge: 3600, httpOnly: false, sameSite: "lax", path: "/" });
+    kutu.set(MUSTERI_CEREZ, musteriCerezi, musteriCerezAyari);
     revalidatePath("/", "layout");
     redirect(`/${dil}/odeme/tamam?no=${numara}&fatura=1`);
   }
@@ -217,5 +231,6 @@ export async function odemeBaslat(veri: FormData): Promise<void> {
   // Sepet henüz BOŞALTILMAZ — müşteri ödemeden vazgeçerse sepeti dursun.
   const kutu = await cookies();
   kutu.set(SON_SIPARIS_COOKIE, ozet, { maxAge: 3600, httpOnly: false, sameSite: "lax", path: "/" });
+  kutu.set(MUSTERI_CEREZ, musteriCerezi, musteriCerezAyari);
   redirect(gitUrl);
 }

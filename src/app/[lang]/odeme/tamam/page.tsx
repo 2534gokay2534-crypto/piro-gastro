@@ -226,6 +226,29 @@ export default async function OdemeTamam({
         </div>
       )}
 
+      {numara && (
+        <div className="mt-6 flex flex-wrap justify-center gap-2.5">
+          <Link
+            href={`/${l}/makbuz/${numara}`}
+            className="rounded-md bg-gold px-5 py-2.5 text-[13.4px] font-bold text-navy-950 transition hover:bg-gold-400"
+          >
+            {om("makbuzGoruntule", l)}
+          </Link>
+          <a
+            href={`/api/makbuz/${numara}/pdf?dil=${l}&ek=1`}
+            className="rounded-md border border-steel-300 px-5 py-2.5 text-[13.4px] font-bold text-navy-900 transition hover:border-gold hover:text-gold"
+          >
+            {om("pdfIndir", l)}
+          </a>
+          <Link
+            href={`/${l}/siparislerim`}
+            className="rounded-md border border-steel-300 px-5 py-2.5 text-[13.4px] font-bold text-navy-900 transition hover:border-gold hover:text-gold"
+          >
+            {om("siparislerim", l)}
+          </Link>
+        </div>
+      )}
+
       <div className="mt-7 flex flex-wrap justify-center gap-3">
         <Link
           href={`/${l}/urunler`}

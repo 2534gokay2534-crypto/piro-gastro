@@ -223,6 +223,50 @@ export async function GET(req: Request) {
       }
 
       /* ---------------- KUPONLAR ---------------- */
+      case "makbuzlar": {
+        const liste = await db.order.findMany({
+          orderBy: { createdAt: "desc" },
+          take: LIMIT,
+          select: {
+            number: true, status: true, payMethod: true, paidMethod: true,
+            subtotalCents: true, vatCents: true, shipCents: true, totalCents: true,
+            createdAt: true, paidAt: true,
+            shipName: true, shipAddr: true, shipZip: true, shipCity: true,
+            customer: { select: { name: true, company: true, email: true, phone: true, orgNr: true, country: true } },
+            _count: { select: { items: true } },
+          },
+        });
+        const durumAdi: Record<string, string> = {
+          paid: "Ödendi", pending: "Ödeme bekleniyor", new: "Yeni / faturalanacak",
+          packing: "Hazırlanıyor", shipped: "Kargoda", delivered: "Teslim edildi",
+          cancelled: "İptal", refunded: "İade",
+        };
+        return indir(
+          "makbuzlar",
+          csvYap(
+            ["Belge no", "Tür", "Tarih", "Ödeme tarihi", "Durum", "Ödeme yöntemi",
+             "Firma", "Kişi", "E-posta", "Telefon", "Org.nr", "Ülke",
+             "Teslimat adresi", "Posta kodu", "Şehir",
+             "Kalem", "Ara toplam", "Kargo", "KDV", "Toplam"],
+            liste.map((o) => [
+              o.number,
+              ["paid", "packing", "shipped", "delivered"].includes(o.status) ? "Makbuz" : "Fatura",
+              o.createdAt.toISOString().slice(0, 16).replace("T", " "),
+              o.paidAt?.toISOString().slice(0, 16).replace("T", " ") ?? "",
+              durumAdi[o.status] ?? o.status,
+              o.paidMethod || o.payMethod,
+              o.customer?.company ?? "", o.customer?.name ?? "",
+              o.customer?.email ?? "", o.customer?.phone ?? "",
+              o.customer?.orgNr ?? "", o.customer?.country ?? "",
+              o.shipAddr ?? "", o.shipZip ?? "", o.shipCity ?? "",
+              o._count.items,
+              csvPara(o.subtotalCents), csvPara(o.shipCents),
+              csvPara(o.vatCents), csvPara(o.totalCents),
+            ]),
+          ),
+        );
+      }
+
       case "faturaBasvuru": {
         const liste = await db.invoiceApplication.findMany({
           orderBy: [{ status: "asc" }, { createdAt: "desc" }],

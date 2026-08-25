@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { isLang, t } from "@/lib/i18n";
 import { ILETISIM } from "@/lib/sohbet";
+import { om } from "@/lib/odeme-metin";
 
 export const revalidate = 3600;
 
@@ -101,6 +102,12 @@ export default async function Hesabim({ params }: { params: Promise<{ lang: stri
 
         <Kutu baslik={m("siparisKutu", l)}>
           <p>{m("siparisMetin", l)}</p>
+          <Link
+            href={`/${l}/siparislerim`}
+            className="mt-3 mr-2 inline-flex rounded-[9px] bg-navy-900 px-4 py-2 text-[13px] font-bold text-white transition hover:bg-navy-800"
+          >
+            {om("siparislerim", l)}
+          </Link>
           <Link
             href={`/${l}/sepet`}
             className="mt-3 inline-flex rounded-[9px] border border-steel-300 px-4 py-2 text-[13px] font-bold text-navy-900 transition hover:border-gold hover:text-gold"

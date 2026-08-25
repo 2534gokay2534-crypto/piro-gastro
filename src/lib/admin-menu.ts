@@ -24,6 +24,7 @@ export const MENU: MenuGrup[] = [
     ogeler: [
       { yol: "/siparisler", ad: "Siparişler", rozet: "siparis", yetki: "siparis" },
       { yol: "/musteriler", ad: "Müşteriler", yetki: "musteri" },
+      { yol: "/makbuzlar", ad: "Sipariş Makbuzları ve Belgeler", yetki: "makbuz" },
       { yol: "/kampanyalar", ad: "Kampanyalar ve Kuponlar", yetki: "kampanya" },
       { yol: "/fatura-basvurulari", ad: "Kurumsal Fatura Başvuruları", rozet: "fatura", yetki: "fatura" },
     ],
@@ -69,6 +70,7 @@ export const YETKILER: Array<{ anahtar: string; ad: string }> = [
   { anahtar: "dashboard", ad: "Dashboard görüntüleme" },
   { anahtar: "siparis", ad: "Siparişler" },
   { anahtar: "musteri", ad: "Müşteriler" },
+  { anahtar: "makbuz", ad: "Sipariş makbuzları ve belgeler" },
   { anahtar: "kampanya", ad: "Kampanya ve kuponlar" },
   { anahtar: "fatura", ad: "Kurumsal fatura başvuruları" },
   { anahtar: "urun", ad: "Ürün yönetimi" },
