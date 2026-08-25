@@ -233,6 +233,7 @@ export async function GET(req: Request) {
             createdAt: true, paidAt: true,
             shipName: true, shipAddr: true, shipZip: true, shipCity: true,
             customer: { select: { name: true, company: true, email: true, phone: true, orgNr: true, country: true } },
+            items: { select: { sku: true, name: true, variant: true, qty: true, unitPriceCents: true, vatRate: true, lineTotalCents: true } },
             _count: { select: { items: true } },
           },
         });
@@ -247,7 +248,7 @@ export async function GET(req: Request) {
             ["Belge no", "Tür", "Tarih", "Ödeme tarihi", "Durum", "Ödeme yöntemi",
              "Firma", "Kişi", "E-posta", "Telefon", "Org.nr", "Ülke",
              "Teslimat adresi", "Posta kodu", "Şehir",
-             "Kalem", "Ara toplam", "Kargo", "KDV", "Toplam"],
+             "Kalem", "Ürünler (adet × SKU · ad · özellik = tutar)", "Ara toplam", "Kargo", "KDV", "Toplam"],
             liste.map((o) => [
               o.number,
               ["paid", "packing", "shipped", "delivered"].includes(o.status) ? "Makbuz" : "Fatura",
@@ -260,6 +261,9 @@ export async function GET(req: Request) {
               o.customer?.orgNr ?? "", o.customer?.country ?? "",
               o.shipAddr ?? "", o.shipZip ?? "", o.shipCity ?? "",
               o._count.items,
+              o.items
+                .map((i) => `${i.qty} × ${i.sku} · ${i.name}${i.variant ? " · " + i.variant : ""} = ${(i.lineTotalCents / 100).toFixed(2)}`)
+                .join(" | "),
               csvPara(o.subtotalCents), csvPara(o.shipCents),
               csvPara(o.vatCents), csvPara(o.totalCents),
             ]),

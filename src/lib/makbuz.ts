@@ -65,7 +65,7 @@ const SIPARIS_SECIM = {
   },
   items: {
     select: {
-      id: true, productId: true, sku: true, name: true,
+      id: true, productId: true, sku: true, name: true, variant: true,
       qty: true, unitPriceCents: true, vatRate: true, lineTotalCents: true,
     },
   },
@@ -140,6 +140,7 @@ function bicimle(s: Ham) {
       id: k.id,
       sku: k.sku,
       ad: k.name,
+      varyant: k.variant ?? "",
       adet: k.qty,
       birimCents: k.unitPriceCents,
       kdvYuzde: k.vatRate,

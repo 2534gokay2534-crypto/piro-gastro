@@ -123,6 +123,9 @@ export default function MakbuzBelge({ m, dil }: { m: Makbuz; dil: string }) {
                       <span className="font-semibold text-navy-900">{k.ad}</span>
                     )}
                     <span className="block font-mono text-[10.6px] text-steel-500">{k.sku}</span>
+                    {k.varyant && (
+                      <span className="mt-0.5 block text-[10.8px] leading-snug text-steel-600">{k.varyant}</span>
+                    )}
                   </td>
                   <td className="py-2.5 text-right tabular-nums">{k.adet}</td>
                   <td className="py-2.5 text-right tabular-nums">{k.birimCents > 0 ? para(k.birimCents) : "—"}</td>

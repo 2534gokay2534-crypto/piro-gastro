@@ -390,6 +390,9 @@ model OrderItem {
   productId String?
   sku       String
   name      String
+  /// Sipariş anındaki ayırt edici özellikler (renk, ölçü, kapasite…).
+  /// Katalog sonradan değişse bile makbuz ne alındığını gösterir.
+  variant   String?
 
   qty            Int @default(1)
   unitPriceCents Int @default(0)

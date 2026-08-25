@@ -40,13 +40,33 @@ export const ULKE_KODLARI: string[] = ULKELER.map((u) => u.kod);
  */
 export const ODEME_YONTEMLERI = [
   {
-    kod: "card",
-    ad: { sv: "Kort, Swish eller Klarna", en: "Card, Swish or Klarna", tr: "Kart, Swish veya Klarna", de: "Karte, Swish oder Klarna" },
+    kod: "swish",
+    ad: { sv: "Swish", en: "Swish", tr: "Swish", de: "Swish" },
     aciklama: {
-      sv: "Betalas säkert hos Stripe.",
-      en: "Paid securely via Stripe.",
-      tr: "Stripe üzerinden güvenle ödenir.",
-      de: "Sichere Zahlung über Stripe.",
+      sv: "Betalas direkt med Swish-appen.",
+      en: "Paid instantly with the Swish app.",
+      tr: "Swish uygulamasıyla anında ödenir.",
+      de: "Sofort mit der Swish-App bezahlt.",
+    },
+  },
+  {
+    kod: "card",
+    ad: { sv: "Kort", en: "Card", tr: "Kart", de: "Karte" },
+    aciklama: {
+      sv: "Visa, Mastercard, AMEX, Apple Pay eller Google Pay.",
+      en: "Visa, Mastercard, AMEX, Apple Pay or Google Pay.",
+      tr: "Visa, Mastercard, AMEX, Apple Pay veya Google Pay.",
+      de: "Visa, Mastercard, AMEX, Apple Pay oder Google Pay.",
+    },
+  },
+  {
+    kod: "klarna",
+    ad: { sv: "Klarna", en: "Klarna", tr: "Klarna", de: "Klarna" },
+    aciklama: {
+      sv: "Betala senare eller dela upp betalningen.",
+      en: "Pay later or split the payment.",
+      tr: "Sonra ödeyin veya taksitlendirin.",
+      de: "Später zahlen oder in Raten aufteilen.",
     },
   },
   {
@@ -197,4 +217,47 @@ export function sonSiparisOku(ham: string | undefined): SonSiparis | null {
   } catch {
     return null; // bozuk çerez — onay sayfası yine de açılır
   }
+}
+
+/**
+ * ÜRÜN VARYANT / ÖZELLİK ÖZETİ
+ *
+ * Katalogda ayrı bir varyant ekseni yok — her SKU kendi ürünü (B2B
+ * ekipmanda olağan). Ürünü ayırt eden şey teknik özellikleridir: renk,
+ * ölçü, kapasite, güç. Bunlar sipariş anında kaydedilir; katalog sonradan
+ * değişse bile makbuz TAM OLARAK ne alındığını gösterir.
+ */
+type OzellikliUrun = {
+  specs?: Array<{ i18n?: Record<string, { label?: string; value?: string }> }>;
+  dims?: { w?: number; d?: number; h?: number; unit?: string } | null;
+  weightKg?: number | null;
+};
+
+/** Öncelikli özellikler — makbuzda en ayırt edici olanlar öne alınır. */
+const ONCELIK = /renk|colour|color|färg|farbe|kapasite|capacity|volym|inhalt|güç|power|effekt|leistung|voltaj|volt|spänning|malzeme|material/i;
+
+export function varyantOzeti(urun: OzellikliUrun, dil: string, azami = 3): string {
+  const parcalar: string[] = [];
+
+  const specler = (urun.specs ?? [])
+    .map((s) => s.i18n?.[dil] ?? s.i18n?.en ?? Object.values(s.i18n ?? {})[0])
+    .filter((s): s is { label?: string; value?: string } => !!s?.label && !!s?.value);
+
+  // Önce ayırt edici olanlar, sonra kalanlar
+  const sirali = [
+    ...specler.filter((s) => ONCELIK.test(s.label ?? "")),
+    ...specler.filter((s) => !ONCELIK.test(s.label ?? "")),
+  ];
+
+  for (const s of sirali.slice(0, azami)) {
+    parcalar.push(`${s.label}: ${String(s.value).replace(/\s*,\s*/g, ", ").trim()}`);
+  }
+
+  const d = urun.dims;
+  if (d?.w && d?.h) {
+    parcalar.push(`${d.w}×${d.d ?? "?"}×${d.h} ${d.unit ?? "mm"}`);
+  }
+  if (urun.weightKg) parcalar.push(`${urun.weightKg} kg`);
+
+  return parcalar.join(" · ").slice(0, 400);
 }

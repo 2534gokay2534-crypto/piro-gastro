@@ -73,7 +73,10 @@ const gecerliSiparis: SiparisFormu = {
 };
 kontrol(Object.keys(formuDogrula(gecerliSiparis)).length === 0, "gecerli siparis -> hata yok");
 kontrol(!!formuDogrula({ ...gecerliSiparis, odeme: "kripto" }).odeme, "odeme 'kripto' -> reddedilir");
-kontrol(!!formuDogrula({ ...gecerliSiparis, odeme: "swish" }).odeme, "odeme 'swish' formda secilemez (Stripe secer)");
+for (const y of ["swish", "card", "klarna", "invoice"]) {
+  kontrol(!formuDogrula({ ...gecerliSiparis, odeme: y }).odeme, "odeme '" + y + "' kabul edilir");
+}
+kontrol(!!formuDogrula({ ...gecerliSiparis, odeme: "bitcoin" }).odeme, "odeme 'bitcoin' reddedilir");
 kontrol(!formuDogrula({ ...gecerliSiparis, odeme: "invoice" }).odeme, "odeme 'invoice' bicimsel olarak gecerli");
 kontrol(!!formuDogrula({ ...gecerliSiparis, ulke: "US" }).ulke, "teslimat 'US' -> reddedilir");
 for (const u of ULKE_KODLARI) {

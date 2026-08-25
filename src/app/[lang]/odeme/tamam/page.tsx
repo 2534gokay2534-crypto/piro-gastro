@@ -14,6 +14,7 @@ import {
 } from "@/lib/siparis";
 import { ad, om } from "@/lib/odeme-metin";
 import { db, dbVar } from "@/lib/db";
+import { demoMu } from "@/lib/odeme-modu";
 
 export const dynamic = "force-dynamic";
 
@@ -118,6 +119,12 @@ export default async function OdemeTamam({
           </p>
         )}
       </div>
+
+      {demoMu() && (
+        <p className="mt-4 rounded-[9px] border border-warn/40 bg-warn/10 px-4 py-2.5 text-center text-[12.6px] font-bold text-warn">
+          {om("demoUyari", l)}
+        </p>
+      )}
 
       {odendi && (
         <p className="mt-4 text-center">

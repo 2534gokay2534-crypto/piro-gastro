@@ -231,6 +231,9 @@ export async function makbuzPdf(m: Makbuz, dil: string): Promise<Uint8Array> {
 
     yaz(kirp(k.ad, F, 9, X.adet - X.ad - 14), X.ad, ustY - 8, 9, FB);
     yaz(k.sku, X.ad, ustY - 20, 7.5, F, RENK.soluk);
+    if (k.varyant) {
+      yaz(kirp(k.varyant, F, 7, X.adet - X.ad - 14), X.ad, ustY - 29, 7, F, RENK.soluk);
+    }
 
     sagaYaz(String(k.adet), X.adet + 26, ustY - 8, 9);
     sagaYaz(k.birimCents > 0 ? para(k.birimCents) : "—", X.birim + 26, ustY - 8, 9);

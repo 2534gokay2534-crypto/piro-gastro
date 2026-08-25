@@ -6,8 +6,9 @@ import { revalidatePath } from "next/cache";
 import { db, dbVar } from "@/lib/db";
 import { CART_COOKIE, cartDetail } from "@/lib/cart";
 import { langDef, pick } from "@/lib/i18n";
-import { SON_SIPARIS_COOKIE, formuDogrula, formuOku, siparisNo, tutarlariHesapla } from "@/lib/siparis";
-import { ODEME_PARA, eurCentToOre, stripe, stripeVar, yontemler } from "@/lib/odeme-saglayici";
+import { SON_SIPARIS_COOKIE, formuDogrula, formuOku, siparisNo, tutarlariHesapla, varyantOzeti } from "@/lib/siparis";
+import { ODEME_PARA, eurCentToOre, stripe } from "@/lib/odeme-saglayici";
+import { YONTEM_KODLARI, demoMu, odemeAcik, stripeYontemi } from "@/lib/odeme-modu";
 import { orgNrSade } from "@/lib/fatura-basvuru";
 import { MUSTERI_CEREZ, MUSTERI_SURE_MS, oturumUret } from "@/lib/musteri-oturum";
 
@@ -78,10 +79,17 @@ export async function odemeBaslat(veri: FormData): Promise<void> {
     }
   }
 
+  // Seçilen ödeme yöntemi (swish | card | klarna); fatura ayrı yol.
+  const yontem = faturali ? "invoice" : (YONTEM_KODLARI.includes(form.odeme) ? form.odeme : "card");
+
   // --- ödeme alınacaksa veritabanı ZORUNLU ---
   // Para alınıp siparişi kaydedilemeyen müşteri kalmasın.
   if (!dbVar) redirect(`/${dil}/odeme?hata=sistem&sebep=veritabani`);
-  if (!faturali && !stripeVar) redirect(`/${dil}/odeme?hata=sistem&sebep=saglayici`);
+  if (!faturali && !odemeAcik()) redirect(`/${dil}/odeme?hata=sistem&sebep=saglayici`);
+
+  // Demo modunda tahsilat yapılmaz; sipariş ödenmiş sayılır ve makbuz
+  // zinciri (Siparişlerim → Muhasebe → Süper Admin) baştan sona işler.
+  const demo = !faturali && demoMu();
 
   const tutar = tutarlariHesapla(sepet.lines, form.ulke);
   const simdi = new Date();
@@ -103,8 +111,10 @@ export async function odemeBaslat(veri: FormData): Promise<void> {
         number: numara,
         customerId: musteri.id,
         // Faturalı sipariş doğrudan "new"; kartlı ödeme önce "pending".
-        status: faturali ? "new" : "pending",
-        payMethod: faturali ? "invoice" : "card",
+        status: faturali ? "new" : demo ? "paid" : "pending",
+        payMethod: faturali ? "invoice" : yontem,
+        paidMethod: demo ? yontem : null,
+        paidAt: demo ? simdi : null,
         currency: "EUR",
         subtotalCents: tutar.netCents,
         vatCents: tutar.vatCents,
@@ -114,11 +124,14 @@ export async function odemeBaslat(veri: FormData): Promise<void> {
         note: form.not || null,
         shipName: form.firma, shipAddr: form.adres,
         shipZip: form.postaKodu, shipCity: form.sehir,
-        provider: faturali ? null : "stripe",
+        provider: faturali ? null : demo ? "demo" : "stripe",
+        paymentRef: demo ? `demo_${simdi.getTime()}` : null,
         items: {
           create: sepet.lines.map((l) => ({
             productId: l.product.id, sku: l.product.sku,
             name: pick(l.product, "name", dil),
+            // Sipariş anındaki ayırt edici özellikler makbuza donuk yazılır
+            variant: varyantOzeti(l.product, dil) || null,
             qty: l.qty, unitPriceCents: l.unitCents, unitCostCents: 0,
             vatRate: tutar.kdvYuzde, lineTotalCents: l.lineCents,
           })),
@@ -135,7 +148,7 @@ export async function odemeBaslat(veri: FormData): Promise<void> {
     .create({
       data: {
         actor: "magaza",
-        action: faturali ? "siparis.fatura" : "siparis.odeme-basladi",
+        action: faturali ? "siparis.fatura" : demo ? "siparis.odendi-demo" : "siparis.odeme-basladi",
         detail: `${numara} · ${form.firma} · ${(tutar.totalCents / 100).toFixed(2)} EUR`,
       },
     })
@@ -154,19 +167,19 @@ export async function odemeBaslat(veri: FormData): Promise<void> {
   };
 
   const ozet = JSON.stringify({
-    no: numara, ulke: form.ulke, odeme: faturali ? "invoice" : "card",
+    no: numara, ulke: form.ulke, odeme: faturali ? "invoice" : yontem,
     firma: form.firma, eposta: form.eposta,
     satir: sepet.lines.map((l) => `${l.product.id}:${l.qty}`).join(","),
   });
 
-  /* ---------- faturalı: ödeme sağlayıcısına gerek yok ---------- */
-  if (faturali) {
+  /* ---------- faturalı veya demo: sağlayıcıya gidilmez ---------- */
+  if (faturali || demo) {
     const kutu = await cookies();
     kutu.delete(CART_COOKIE);
     kutu.set(SON_SIPARIS_COOKIE, ozet, { maxAge: 3600, httpOnly: false, sameSite: "lax", path: "/" });
     kutu.set(MUSTERI_CEREZ, musteriCerezi, musteriCerezAyari);
     revalidatePath("/", "layout");
-    redirect(`/${dil}/odeme/tamam?no=${numara}&fatura=1`);
+    redirect(`/${dil}/odeme/tamam?no=${numara}${faturali ? "&fatura=1" : ""}${demo ? "&demo=1" : ""}`);
   }
 
   /* ---------- kartlı/Swish/Klarna: Stripe Checkout ---------- */
@@ -180,7 +193,8 @@ export async function odemeBaslat(veri: FormData): Promise<void> {
   try {
     const oturum = await stripe().checkout.sessions.create({
       mode: "payment",
-      payment_method_types: yontemler(),
+      // Müşteri hangi yöntemi seçtiyse Stripe'ta yalnızca o açılır.
+      payment_method_types: stripeYontemi(yontem),
       locale: dil === "sv" ? "sv" : dil === "de" ? "de" : "en",
       customer_email: form.eposta,
       client_reference_id: numara,

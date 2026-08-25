@@ -103,6 +103,12 @@ const M: Record<string, Record<string, string>> = {
     tr: "Ödemeyi Stripe üzerinden yaparsınız. Kart bilgileri sunucularımıza hiç ulaşmaz.",
     de: "Sie zahlen über Stripe. Kartendaten erreichen unsere Server nie.",
   },
+  demoUyari: {
+    sv: "DEMOLÄGE — ingen riktig betalning dras. Ordern skapas för test.",
+    en: "DEMO MODE — no real payment is taken. The order is created for testing.",
+    tr: "DEMO MODU — gerçek tahsilat yapılmaz. Sipariş test amaçlı oluşturulur.",
+    de: "DEMO-MODUS — es wird keine echte Zahlung eingezogen. Testbestellung.",
+  },
   odemeKapali: {
     sv: "Kortbetalning är tillfälligt stängd. Kontakta oss så hjälper vi dig med ordern.",
     en: "Card payment is temporarily unavailable. Contact us and we will help you with the order.",

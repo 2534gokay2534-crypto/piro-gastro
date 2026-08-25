@@ -5,7 +5,7 @@ import { cartDetail } from "@/lib/cart";
 import { pick, t, isLang, type Lang } from "@/lib/i18n";
 import { money } from "@/lib/money";
 import { ULKELER, tutarlariHesapla } from "@/lib/siparis";
-import { ROZETLER, stripeVar } from "@/lib/odeme-saglayici";
+import { YONTEMLER, demoMu, odemeAcik } from "@/lib/odeme-modu";
 import { ad, om } from "@/lib/odeme-metin";
 import { faturaAcikMi, odemeBaslat } from "@/app/actions/odeme";
 import Icon from "@/components/Icon";
@@ -115,6 +115,10 @@ export default async function OdemePage({
   // Formda org.nr + e-posta doluysa kontrol edilir; boşsa gösterilmez.
   const faturaAcik = await faturaAcikMi(sp.vergiNo ?? "", sp.eposta ?? "");
 
+  // Ödeme alınabiliyor mu? (canlı sağlayıcı veya demo modu)
+  const acik = odemeAcik();
+  const demo = demoMu();
+
   return (
     <div className="mx-auto max-w-[1320px] px-[30px] py-8">
       <nav className="text-[12.4px] text-steel-500">
@@ -128,7 +132,13 @@ export default async function OdemePage({
       <h1 className="mt-3 text-[30px] font-extrabold tracking-tight text-navy-900">{om("baslik", l)}</h1>
       <p className="mt-1 text-[14px] text-steel-700">{om("altBaslik", l)}</p>
 
-      {!stripeVar && !faturaAcik && (
+      {demo && (
+        <p className="mt-4 rounded-[9px] border border-warn/40 bg-warn/10 px-4 py-2.5 text-[13px] font-bold text-warn">
+          {om("demoUyari", l)}
+        </p>
+      )}
+
+      {!acik && !faturaAcik && (
         <p className="mt-4 rounded-[9px] border border-warn/40 bg-warn/10 px-4 py-2.5 text-[13px] font-semibold text-warn">
           {om("odemeKapali", l)}
         </p>
@@ -192,42 +202,52 @@ export default async function OdemePage({
           <section className="rounded-[10px] border border-steel-200 p-5">
             <h2 className="text-[15px] font-extrabold text-navy-900">{om("odemeBolum", l)}</h2>
 
-            {/* Kart / Swish / Klarna — Stripe Checkout üzerinden.
-                Apple Pay ve Google Pay uygun cihazlarda kart seçeneği
-                içinde kendiliğinden görünür, ayrı satır gerektirmez. */}
-            <label
-              className={
-                "mt-3 flex gap-3 rounded-[9px] border p-3.5 " +
-                (stripeVar
-                  ? "cursor-pointer border-steel-200 hover:border-gold has-checked:border-gold has-checked:bg-gold-200/20"
-                  : "cursor-not-allowed border-steel-200 bg-steel-50 opacity-60")
-              }
-            >
-              <input
-                type="radio"
-                name="odeme"
-                value="card"
-                defaultChecked={stripeVar}
-                disabled={!stripeVar}
-                className="mt-0.5 h-4 w-4 accent-navy-700"
-              />
-              <span className="min-w-0 flex-1">
-                <b className="block text-[13.6px] text-navy-900">{om("guvenliOdeme", l)}</b>
-                <span className="mt-1.5 flex flex-wrap gap-1.5">
-                  {ROZETLER.map((r) => (
-                    <span
-                      key={r.kod}
-                      className="rounded border border-steel-200 bg-steel-50 px-2 py-0.5 text-[11.4px] font-semibold text-steel-700"
-                    >
-                      {r.ad}
+            {/* Swish, kart ve Klarna ayrı ayrı seçilir; Swish İsveç'te en
+                yaygın yöntem olduğu için "kart" başlığı altında saklanmaz.
+                Apple Pay ve Google Pay uygun cihazlarda kart seçeneği içinde
+                kendiliğinden görünür. */}
+            <div className="mt-3 space-y-2.5">
+              {YONTEMLER.map((y, i) => (
+                <label
+                  key={y.kod}
+                  className={
+                    "flex gap-3 rounded-[9px] border p-3.5 " +
+                    (acik
+                      ? "cursor-pointer border-steel-200 hover:border-gold has-checked:border-gold has-checked:bg-gold-200/20"
+                      : "cursor-not-allowed border-steel-200 bg-steel-50 opacity-60")
+                  }
+                >
+                  <input
+                    type="radio"
+                    name="odeme"
+                    value={y.kod}
+                    defaultChecked={acik && (eski("odeme") ? eski("odeme") === y.kod : i === 0)}
+                    disabled={!acik}
+                    className="mt-0.5 h-4 w-4 accent-navy-700"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <b className="block text-[13.6px] text-navy-900">{ad(y.ad, l)}</b>
+                    <span className="block text-[12.4px] leading-relaxed text-steel-600">
+                      {ad(y.aciklama, l)}
                     </span>
-                  ))}
-                </span>
-                <span className="mt-1.5 block text-[12.2px] leading-relaxed text-steel-600">
-                  {stripeVar ? `${om("saglayiciMetin", l)} ${om("sekBilgi", l)}` : om("odemeKapali", l)}
-                </span>
-              </span>
-            </label>
+                    <span className="mt-1.5 flex flex-wrap gap-1.5">
+                      {y.rozetler.map((r) => (
+                        <span
+                          key={r}
+                          className="rounded border border-steel-200 bg-white px-2 py-0.5 text-[11.2px] font-semibold text-steel-700"
+                        >
+                          {r}
+                        </span>
+                      ))}
+                    </span>
+                  </span>
+                </label>
+              ))}
+
+              <p className="text-[11.8px] leading-relaxed text-steel-500">
+                {acik ? `${om("saglayiciMetin", l)} ${om("sekBilgi", l)}` : om("odemeKapali", l)}
+              </p>
+            </div>
 
             {/* Fatura — yalnızca onaylı başvurusu olan firmaya açılır. */}
             {faturaAcik ? (
@@ -332,13 +352,13 @@ export default async function OdemePage({
 
           <button
             type="submit"
-            disabled={!stripeVar && !faturaAcik}
+            disabled={!acik && !faturaAcik}
             className="mt-4 w-full cursor-pointer rounded-md bg-gold px-6 py-3.5 text-[15px] font-bold text-navy-950 transition hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-45"
           >
             {om("odemeyeGec", l)}
           </button>
           <p className="mt-2 text-[11.6px] leading-relaxed text-steel-500">
-            {stripeVar ? om("saglayiciMetin", l) : om("kosul", l)}
+            {acik ? om("saglayiciMetin", l) : om("kosul", l)}
           </p>
 
           <Link
