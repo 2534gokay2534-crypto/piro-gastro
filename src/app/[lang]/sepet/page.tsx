@@ -24,6 +24,11 @@ const S = {
     sum: "Ara toplam", total: "Genel toplam", ship: "Kargo", free: "Ücretsiz kargo", checkout: "Ödemeye geç",
     remove: "Kaldır", freeHint: (x: string) => `Ücretsiz kargo için ${x} daha ekleyin`,
   },
+  de: {
+    title: "Warenkorb", empty: "Ihr Warenkorb ist leer", cont: "Weiter einkaufen",
+    sum: "Zwischensumme", total: "Gesamtbetrag", ship: "Versand", free: "Kostenloser Versand", checkout: "Zur Kasse",
+    remove: "Entfernen", freeHint: (x: string) => `Noch ${x} für kostenlosen Versand`,
+  },
 } as Record<string, {
   title: string; empty: string; cont: string; sum: string; total: string;
   ship: string; free: string; checkout: string; remove: string;

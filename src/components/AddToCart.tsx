@@ -67,7 +67,7 @@ export default function AddToCart({
       >
         <Icon name={eklendi ? "arrow" : "cart"} className="h-5 w-5" />
         {eklendi
-          ? { sv: "Tillagd", en: "Added", tr: "Sepete eklendi" }[lang]
+          ? ({ sv: "Tillagd", en: "Added", tr: "Sepete eklendi", de: "Hinzugefügt" } as Record<string, string>)[lang] ?? "Added"
           : t("addToCart", lang)}
       </button>
     </div>
