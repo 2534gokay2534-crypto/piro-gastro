@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import SiteHeader from "@/components/SiteHeader";
+import ChatWidget from "@/components/ChatWidget";
 import { LANGS, isLang, t, type Lang } from "@/lib/i18n";
 
 export function generateStaticParams() {
@@ -41,6 +42,10 @@ export default async function LangLayout({
             </p>
           </div>
         </footer>
+
+        {/* Canlı sohbet — sayfa akışının dışında (position: fixed),
+            mevcut düzeni ve SEO'yu etkilemez. */}
+        <ChatWidget lang={l} />
       </body>
     </html>
   );

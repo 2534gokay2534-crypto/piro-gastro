@@ -255,3 +255,42 @@ model AuditLog {
 
   @@index([createdAt])
 }
+
+// ---------------------------------------------------------------
+// CANLI SOHBET
+// Ziyaretçi mesajları ve yönetici yanıtları. Mağaza tarafı bu
+// tablolara BAĞLI DEĞİLDİR; veritabanı yoksa sohbet penceresi
+// "mesaj bırak" kipine düşer, site normal çalışmayı sürdürür.
+// ---------------------------------------------------------------
+
+model ChatSession {
+  id          String    @id @default(cuid())
+  visitorId   String
+  name        String?
+  email       String?
+  phone       String?
+  lang        String    @default("sv")
+  page        String?
+  status      String    @default("open")   // open | closed
+  mode        String    @default("live")   // live | offline
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  agentSeenAt DateTime?
+
+  messages ChatMessage[]
+
+  @@index([status, updatedAt])
+  @@index([visitorId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  sender    String // visitor | agent | system
+  body      String
+  createdAt DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+}
