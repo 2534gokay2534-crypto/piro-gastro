@@ -6,6 +6,7 @@ import { pick, strict, title as urunAdi, t, isLang, type Lang } from "@/lib/i18n
 import { money, netCents, stockState } from "@/lib/money";
 import AddToCart from "@/components/AddToCart";
 import DimensionDiagram from "@/components/DimensionDiagram";
+import UrunGaleri from "@/components/UrunGaleri";
 
 export const revalidate = 300;
 
@@ -87,41 +88,15 @@ export default async function ProductPage({
         {/* görseller */}
         <div>
           {/* Görsel + ölçü katmanı yan yana.
-              Geniş ekranda şema görselin sağında, dar ekranda altına iner. */}
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
-            <div className="aspect-[4/3] flex-1 overflow-hidden rounded-[10px] border border-steel-200 bg-steel-50">
-              {p.images[0] ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={p.images[0].url}
-                  alt={pick(p, "name", l)}
-                  className="h-full w-full object-contain p-6"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-steel-500">{p.sku}</div>
-              )}
-            </div>
-
+              Geniş ekranda şema görselin sağında, dar ekranda altına iner.
+              Şema, galeriye children olarak geçirilir; yerleşim değişmez. */}
+          <UrunGaleri images={p.images} alt={pick(p, "name", l)} sku={p.sku} lang={l}>
             {p.dims && (
               <div className="xl:w-[268px] xl:shrink-0">
                 <DimensionDiagram dims={p.dims} lang={l} weightKg={p.weightKg} />
               </div>
             )}
-          </div>
-
-          {p.images.length > 1 && (
-            <div className="mt-3 grid grid-cols-5 gap-2">
-              {p.images.slice(0, 10).map((im, i) => (
-                <div
-                  key={i}
-                  className="aspect-square overflow-hidden rounded border border-steel-200 bg-steel-50"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={im.url} alt="" loading="lazy" className="h-full w-full object-contain p-1" />
-                </div>
-              ))}
-            </div>
-          )}
+          </UrunGaleri>
         </div>
 
         {/* bilgi */}
