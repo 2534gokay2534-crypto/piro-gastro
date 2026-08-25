@@ -90,7 +90,7 @@ export default async function Makbuzlar({
   if (!v) return <VeritabaniGerekli lang={lang} sayfa="Sipariş Makbuzları ve Belgeler" hata={hata} />;
 
   // Seçili belge — sağda tam görünüm, yazdırılabilir
-  const acik = sp.ac ? await makbuzGetir(sp.ac) : null;
+  const acik = sp.ac ? await makbuzGetir(sp.ac, lang) : null;
 
   const sorgu = new URLSearchParams();
   if (q) sorgu.set("q", q);
@@ -278,7 +278,7 @@ export default async function Makbuzlar({
                   Siparişi yönet
                 </Link>
               </div>
-              <MakbuzBelge m={acik} dil={lang} />
+              <MakbuzBelge m={acik} dil={lang} teknik />
             </>
           )}
         </div>

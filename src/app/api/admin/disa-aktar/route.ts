@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db, dbVar } from "@/lib/db";
 import { CIRO_DURUMLARI, ODEME, SIPARIS_DURUM, csvPara, csvYap } from "@/lib/admin-ui";
+import { DONEMLER, donemBaslangici, donemlereBol, genelToplam, type DonemTuru } from "@/lib/rapor";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -223,6 +224,37 @@ export async function GET(req: Request) {
       }
 
       /* ---------------- KUPONLAR ---------------- */
+      case "rapor": {
+        const tur = (u.searchParams.get("d") ?? "ay") as DonemTuru;
+        const secili = DONEMLER.find((x: { kod: DonemTuru }) => x.kod === tur) ?? DONEMLER[2];
+        const liste = await db.order.findMany({
+          where: { status: { in: CIRO_DURUMLARI }, createdAt: { gte: donemBaslangici(secili.kod, secili.adet) } },
+          select: {
+            createdAt: true, totalCents: true, subtotalCents: true,
+            vatCents: true, shipCents: true, costCents: true,
+            _count: { select: { items: true } },
+          },
+        });
+        const satirlar = donemlereBol(liste.map((o) => ({ ...o, _kalem: o._count.items })), secili.kod);
+        const t = genelToplam(satirlar);
+        return indir(
+          `muhasebe-raporu-${secili.kod}`,
+          csvYap(
+            ["Dönem", "Sipariş", "Kalem", "Net satış", "Kargo", "KDV", "Ciro", "Kâr", "Ortalama sipariş"],
+            [
+              ...satirlar.map((s) => [
+                s.baslik, s.siparis, s.urunAdedi,
+                csvPara(s.netCents), csvPara(s.kargoCents), csvPara(s.kdvCents),
+                csvPara(s.ciroCents), csvPara(s.karCents), csvPara(s.ortalamaCents),
+              ]),
+              ["TOPLAM", t.siparis, t.urunAdedi,
+               csvPara(t.netCents), csvPara(t.kargoCents), csvPara(t.kdvCents),
+               csvPara(t.ciroCents), csvPara(t.karCents), csvPara(t.ortalamaCents)],
+            ],
+          ),
+        );
+      }
+
       case "makbuzlar": {
         const liste = await db.order.findMany({
           orderBy: { createdAt: "desc" },

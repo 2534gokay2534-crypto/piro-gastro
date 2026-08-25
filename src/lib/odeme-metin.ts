@@ -221,6 +221,9 @@ const M: Record<string, Record<string, string>> = {
   pdfIndir: { sv: "Ladda ner PDF", en: "Download PDF", tr: "PDF indir", de: "PDF herunterladen" },
   pdfAc: { sv: "Öppna PDF", en: "Open PDF", tr: "PDF'i aç", de: "PDF öffnen" },
   yazdirBelge: { sv: "Skriv ut", en: "Print", tr: "Yazdır", de: "Drucken" },
+  teknikBilgiler: { sv: "Tekniska data", en: "Technical data", tr: "Teknik bilgiler", de: "Technische Daten" },
+  olculer: { sv: "Mått", en: "Dimensions", tr: "Ölçüler", de: "Maße" },
+  agirlik: { sv: "Vikt", en: "Weight", tr: "Ağırlık", de: "Gewicht" },
   belgeNot: { sv: "Meddelande", en: "Note", tr: "Not", de: "Nachricht" },
   belgeler: { sv: "Dokument", en: "Documents", tr: "Belgeler", de: "Dokumente" },
   odemeDurumu: { sv: "Betalstatus", en: "Payment status", tr: "Ödeme durumu", de: "Zahlungsstatus" },
@@ -254,6 +257,41 @@ const M: Record<string, Record<string, string>> = {
     en: "You are not authorised to view this document.",
     tr: "Bu belgeyi görüntüleme yetkiniz yok.",
     de: "Sie sind nicht berechtigt, dieses Dokument anzusehen.",
+  },
+  /* --- test ödeme ekranı --- */
+  testOrtami: {
+    sv: "Testmiljö — ingen riktig betalning",
+    en: "Test environment — no real payment",
+    tr: "Test ortamı — gerçek ödeme yok",
+    de: "Testumgebung — keine echte Zahlung",
+  },
+  odenecekTutar: { sv: "Att betala", en: "Amount to pay", tr: "Ödenecek tutar", de: "Zu zahlender Betrag" },
+  testAciklama: {
+    sv: "Så här ser betalsidan ut. Inga kortuppgifter samlas in i testläge — välj i stället vilket svar betalleverantören ska ge.",
+    en: "This is how the payment page behaves. No card details are collected in test mode — instead choose the response the payment provider should return.",
+    tr: "Ödeme sayfası böyle çalışır. Test modunda kart bilgisi toplanmaz — bunun yerine ödeme sağlayıcısının vereceği yanıtı seçin.",
+    de: "So verhält sich die Zahlungsseite. Im Testmodus werden keine Kartendaten erfasst — wählen Sie stattdessen die Antwort des Zahlungsanbieters.",
+  },
+  testOnayla: { sv: "Godkänn betalning", en: "Approve payment", tr: "Ödemeyi onayla", de: "Zahlung bestätigen" },
+  testReddet: { sv: "Simulera nekad betalning", en: "Simulate declined payment", tr: "Reddedilen ödemeyi dene", de: "Abgelehnte Zahlung simulieren" },
+  testVazgec: { sv: "Avbryt", en: "Cancel", tr: "Vazgeç", de: "Abbrechen" },
+  testAltNot: {
+    sv: "Beloppet dras i SEK i skarpt läge. Just nu sker ingen transaktion och inga pengar rör sig.",
+    en: "In live mode the amount is charged in SEK. Right now no transaction happens and no money moves.",
+    tr: "Canlı modda tahsilat SEK üzerinden yapılır. Şu anda hiçbir işlem gerçekleşmez, para hareketi olmaz.",
+    de: "Im Live-Modus wird der Betrag in SEK abgebucht. Aktuell findet keine Transaktion statt.",
+  },
+  odemeReddedildi: {
+    sv: "Betalningen nekades. Varukorgen är kvar — försök gärna igen.",
+    en: "The payment was declined. Your cart is intact — please try again.",
+    tr: "Ödeme reddedildi. Sepetiniz duruyor — tekrar deneyebilirsiniz.",
+    de: "Die Zahlung wurde abgelehnt. Ihr Warenkorb bleibt — bitte erneut versuchen.",
+  },
+  testSiparis: {
+    sv: "Testorder — inga pengar har dragits.",
+    en: "Test order — no money was charged.",
+    tr: "Test siparişi — hiçbir tahsilat yapılmadı.",
+    de: "Testbestellung — es wurde kein Geld abgebucht.",
   },
 };
 

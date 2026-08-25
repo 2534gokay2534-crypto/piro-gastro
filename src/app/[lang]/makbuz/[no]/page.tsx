@@ -27,7 +27,7 @@ export default async function MakbuzSayfasi({
   const l = lang as Lang;
   const numara = decodeURIComponent(no ?? "").trim().toUpperCase();
 
-  const m = await makbuzGetir(numara);
+  const m = await makbuzGetir(numara, l);
   if (!m) notFound();
 
   /* --- erişim: müşteri oturumu ya da yönetici --- */

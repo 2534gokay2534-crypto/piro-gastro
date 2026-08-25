@@ -122,7 +122,7 @@ export default async function OdemeTamam({
 
       {demoMu() && (
         <p className="mt-4 rounded-[9px] border border-warn/40 bg-warn/10 px-4 py-2.5 text-center text-[12.6px] font-bold text-warn">
-          {om("demoUyari", l)}
+          {om("testSiparis", l)}
         </p>
       )}
 

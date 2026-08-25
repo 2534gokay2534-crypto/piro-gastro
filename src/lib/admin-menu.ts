@@ -44,6 +44,7 @@ export const MENU: MenuGrup[] = [
       { yol: "/muhasebe", ad: "Muhasebe", yetki: "muhasebe" },
       { yol: "/gelir-gider", ad: "Gelir-Gider", yetki: "muhasebe" },
       { yol: "/raporlar", ad: "Satış Raporları", yetki: "rapor" },
+      { yol: "/muhasebe-raporlari", ad: "Muhasebe Raporları", yetki: "muhasebe" },
     ],
   },
   {

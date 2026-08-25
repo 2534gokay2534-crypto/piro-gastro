@@ -80,18 +80,18 @@ type Ham = NonNullable<Awaited<ReturnType<typeof hamSorgu>>>;
 export type Makbuz = ReturnType<typeof bicimle>;
 
 /** Bir siparişin makbuz verisini getirir. */
-export async function makbuzGetir(numara: string) {
+export async function makbuzGetir(numara: string, lang = "tr") {
   if (!dbVar || !numara) return null;
   try {
     const s = await hamSorgu(numara);
-    return s ? bicimle(s) : null;
+    return s ? bicimle(s, lang) : null;
   } catch {
     return null;
   }
 }
 
 /** Bir e-postaya ait tüm siparişler — "Siparişlerim" listesi. */
-export async function siparislerimGetir(eposta: string, limit = 100) {
+export async function siparislerimGetir(eposta: string, limit = 100, lang = "tr") {
   if (!dbVar) return [];
   const e = epostaSade(eposta);
   if (!e) return [];
@@ -102,7 +102,7 @@ export async function siparislerimGetir(eposta: string, limit = 100) {
       take: limit,
       select: SIPARIS_SECIM,
     });
-    return liste.map(bicimle);
+    return liste.map((x) => bicimle(x, lang));
   } catch {
     return [];
   }
@@ -133,7 +133,7 @@ export function erisebilirMi(m: Makbuz, eposta: string | null): boolean {
 }
 
 /** Ham kaydı makbuz biçimine çevirir; görselleri katalogdan bağlar. */
-function bicimle(s: Ham) {
+function bicimle(s: Ham, lang = "tr") {
   const kalemler = s.items.map((k) => {
     const urun = k.productId ? productById(k.productId) : undefined;
     return {
@@ -147,6 +147,16 @@ function bicimle(s: Ham) {
       satirCents: k.lineTotalCents,
       gorsel: urun?.images?.[0]?.url ?? null,
       slug: urun?.slug ?? null,
+      // Teknik bilgiler ve ölçüler — Süper Admin belge görünümünde açılır.
+      // Katalogdan okunur; varyant alanı sipariş anını, bu alan güncel
+      // teknik dökümü gösterir.
+      olculer: urun?.dims ?? null,
+      agirlikKg: urun?.weightKg ?? null,
+      teknik: (urun?.specs ?? [])
+        .map((sp) => sp.i18n?.[lang] ?? sp.i18n?.en ?? Object.values(sp.i18n ?? {})[0])
+        .filter((sp): sp is { label: string; value: string } => !!sp?.label && !!sp?.value)
+        .slice(0, 12)
+        .map((sp) => ({ etiket: sp.label, deger: String(sp.value).replace(/s*,s*/g, ", ") })),
     };
   });
 

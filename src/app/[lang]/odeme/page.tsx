@@ -134,13 +134,19 @@ export default async function OdemePage({
 
       {demo && (
         <p className="mt-4 rounded-[9px] border border-warn/40 bg-warn/10 px-4 py-2.5 text-[13px] font-bold text-warn">
-          {om("demoUyari", l)}
+          {om("testOrtami", l)}
         </p>
       )}
 
       {!acik && !faturaAcik && (
         <p className="mt-4 rounded-[9px] border border-warn/40 bg-warn/10 px-4 py-2.5 text-[13px] font-semibold text-warn">
           {om("odemeKapali", l)}
+        </p>
+      )}
+
+      {sp.hata === "reddedildi" && (
+        <p className="mt-4 rounded-[9px] bg-danger/10 px-4 py-2.5 text-[13px] font-semibold text-danger">
+          {om("odemeReddedildi", l)}
         </p>
       )}
 

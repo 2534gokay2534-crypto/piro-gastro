@@ -18,7 +18,16 @@ const para = (cents: number) =>
 const tarihSaat = (d: Date) =>
   new Intl.DateTimeFormat("sv-SE", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Stockholm" }).format(d);
 
-export default function MakbuzBelge({ m, dil }: { m: Makbuz; dil: string }) {
+export default function MakbuzBelge({
+  m,
+  dil,
+  teknik = false,
+}: {
+  m: Makbuz;
+  dil: string;
+  /** Teknik bilgiler ve ölçüler gösterilsin mi? (Süper Admin görünümü) */
+  teknik?: boolean;
+}) {
   const d = ODEME_DURUM[m.durum] ?? ODEME_DURUM.new;
   const durumMetni = d.ad[dil] ?? d.ad.en;
   const tonSinif =
@@ -125,6 +134,31 @@ export default function MakbuzBelge({ m, dil }: { m: Makbuz; dil: string }) {
                     <span className="block font-mono text-[10.6px] text-steel-500">{k.sku}</span>
                     {k.varyant && (
                       <span className="mt-0.5 block text-[10.8px] leading-snug text-steel-600">{k.varyant}</span>
+                    )}
+                    {teknik && (k.teknik.length > 0 || k.olculer) && (
+                      <span className="mt-1.5 block rounded bg-steel-50 px-2 py-1.5">
+                        <span className="block text-[9.4px] font-bold uppercase tracking-wider text-steel-500">
+                          {om("teknikBilgiler", dil)}
+                        </span>
+                        <span className="mt-0.5 grid gap-x-3 gap-y-0.5 sm:grid-cols-2">
+                          {k.olculer && (
+                            <span className="text-[10.6px] leading-snug text-steel-700">
+                              <b className="font-semibold">{om("olculer", dil)}:</b>{" "}
+                              {k.olculer.w}×{k.olculer.d}×{k.olculer.h} {k.olculer.unit ?? "mm"}
+                            </span>
+                          )}
+                          {k.agirlikKg != null && (
+                            <span className="text-[10.6px] leading-snug text-steel-700">
+                              <b className="font-semibold">{om("agirlik", dil)}:</b> {k.agirlikKg} kg
+                            </span>
+                          )}
+                          {k.teknik.map((tk) => (
+                            <span key={tk.etiket} className="text-[10.6px] leading-snug text-steel-700">
+                              <b className="font-semibold">{tk.etiket}:</b> {tk.deger}
+                            </span>
+                          ))}
+                        </span>
+                      </span>
                     )}
                   </td>
                   <td className="py-2.5 text-right tabular-nums">{k.adet}</td>

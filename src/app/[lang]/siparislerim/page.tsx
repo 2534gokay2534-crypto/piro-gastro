@@ -45,7 +45,7 @@ export default async function Siparislerim({
 
   const kutu = await cookies();
   const eposta = await oturumSuan(kutu.get(MUSTERI_CEREZ)?.value);
-  const liste = eposta ? await siparislerimGetir(eposta) : [];
+  const liste = eposta ? await siparislerimGetir(eposta, 100, l) : [];
 
   /* ---------------- oturum yok: erişim formu ---------------- */
   if (!eposta) {
