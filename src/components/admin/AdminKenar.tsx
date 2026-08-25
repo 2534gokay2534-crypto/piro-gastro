@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { MENU } from "@/lib/admin-menu";
+import { adminCikis } from "@/app/actions/admin-giris";
 
 /**
  * Süper Admin sol menüsü.
@@ -124,13 +125,22 @@ export default function AdminKenar({
 
           {govde}
 
-          <div className="px-5 pb-6 pt-2">
+          <div className="space-y-2.5 px-5 pb-6 pt-2">
             <Link
               href={`/${lang}`}
-              className="text-[12px] font-semibold text-steel-500 hover:text-gold"
+              className="block text-[12px] font-semibold text-steel-500 hover:text-gold"
             >
               ← Mağazaya dön
             </Link>
+            <form action={adminCikis}>
+              <input type="hidden" name="dil" value={lang} />
+              <button
+                type="submit"
+                className="text-[12px] font-semibold text-steel-500 hover:text-danger"
+              >
+                Oturumu kapat
+              </button>
+            </form>
           </div>
         </div>
       </aside>
