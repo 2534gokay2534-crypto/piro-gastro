@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { ODEME, SIPARIS_DURUM, para, sayi, tarihSaat } from "@/lib/admin-ui";
 import { siparisDurum, siparisNot, siparisSil } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { DUGME, Kutu, Rozet, Sayfa, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export default async function SiparisDetay({
       include: { items: true, customer: true },
     });
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Sipariş" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Sipariş" hata={gizliTemizle(e)} />;
   }
   if (!o) notFound();
 

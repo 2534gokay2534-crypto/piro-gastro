@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { para, sayi, tarihSaat, dilAdi} from "@/lib/admin-ui";
 import { urunKaydet, urunSil } from "@/app/actions/admin-urun";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { DUGME, Kutu, Rozet, Sayfa, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ export default async function UrunDuzenle({
       db.stockMovement.findMany({ where: { productId: id }, orderBy: { createdAt: "desc" }, take: 10 }),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Ürün" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Ürün" hata={gizliTemizle(e)} />;
   }
   if (!p) notFound();
 

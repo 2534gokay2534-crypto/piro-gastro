@@ -4,6 +4,7 @@ import { isLang } from "@/lib/i18n";
 import { sayi, tarihSaat } from "@/lib/admin-ui";
 import { yedekAl, yedekSil } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { Bos, DUGME, Kart, Kutu, Rozet, Sayfa, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +42,7 @@ export default async function Yedekleme({ params }: { params: Promise<{ lang: st
       })(),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Yedekleme" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Yedekleme" hata={gizliTemizle(e)} />;
   }
 
   return (

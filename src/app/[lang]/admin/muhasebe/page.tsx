@@ -4,6 +4,7 @@ import { db, dbVar } from "@/lib/db";
 import { isLang } from "@/lib/i18n";
 import { CIRO_DURUMLARI, ODEME, para, sayi, yuzde } from "@/lib/admin-ui";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { Bos, DUGME, Kart, Kutu, Sayfa, Secim, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -82,7 +83,7 @@ export default async function Muhasebe({
       }),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Muhasebe" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Muhasebe" hata={gizliTemizle(e)} />;
   }
 
   const ciro = satis._sum.totalCents ?? 0;

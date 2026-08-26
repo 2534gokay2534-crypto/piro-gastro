@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { sayi, tarih, tarihSaat } from "@/lib/admin-ui";
 import { kullaniciKaydet, kullaniciSil } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { Bos, DUGME, Kutu, Rozet, Sayfa, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +46,7 @@ export default async function Kullanicilar({
       db.role.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Kullanıcılar" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Kullanıcılar" hata={gizliTemizle(e)} />;
   }
 
   const duzenlenen = d ? liste.find((k) => k.id === d) : null;

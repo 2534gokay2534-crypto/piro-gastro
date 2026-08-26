@@ -4,6 +4,7 @@ import { isLang } from "@/lib/i18n";
 import { sayi, tarihSaat } from "@/lib/admin-ui";
 import { loglariTemizle } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import {
   AramaCubugu, Bos, DUGME, Kart, Kutu, Rozet, Sayfa, Sayfalama, Tablo, Td, Th,
 } from "@/components/admin/UI";
@@ -65,7 +66,7 @@ export default async function Loglar({
       db.auditLog.count({ where: { createdAt: { gte: gunOnce(7) } } }),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Sistem Logları" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Sistem Logları" hata={gizliTemizle(e)} />;
   }
 
   const sonSayfa = Math.max(1, Math.ceil(toplam / SAYFA));

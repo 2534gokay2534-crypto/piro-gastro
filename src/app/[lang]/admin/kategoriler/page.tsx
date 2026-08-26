@@ -6,6 +6,7 @@ import { isLang } from "@/lib/i18n";
 import { sayi } from "@/lib/admin-ui";
 import { kategoriKaydet, kategoriSil } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { Bos, DUGME, Kutu, Rozet, Sayfa, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +41,7 @@ export default async function Kategoriler({
       db.product.groupBy({ by: ["categoryId"], _count: { _all: true } }),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Kategoriler" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Kategoriler" hata={gizliTemizle(e)} />;
   }
 
   const say = new Map(sayimlar.map((x) => [x.categoryId, x._count._all]));

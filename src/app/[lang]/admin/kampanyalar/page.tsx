@@ -6,6 +6,7 @@ import { para, sayi, tarih, dilAdi} from "@/lib/admin-ui";
 import { kuponKaydet, kuponSil } from "@/app/actions/admin-genel";
 import { topluIslem } from "@/app/actions/admin-urun";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { Bos, DUGME, Kart, Kutu, Rozet, Sayfa, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +56,7 @@ export default async function Kampanyalar({
       db.product.count({ where: { campaignOn: true } }),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Kampanyalar ve Kuponlar" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Kampanyalar ve Kuponlar" hata={gizliTemizle(e)} />;
   }
 
   const duzenlenen = d ? kuponlar.find((k) => k.id === d) : null;

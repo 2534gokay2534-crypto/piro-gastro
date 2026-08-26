@@ -4,6 +4,7 @@ import { db, dbVar } from "@/lib/db";
 import { isLang } from "@/lib/i18n";
 import { CIRO_DURUMLARI, para, sayi, yuzde } from "@/lib/admin-ui";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { Bos, DUGME, Kart, Kutu, Sayfa, Secim, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +55,7 @@ export default async function Raporlar({
       })(),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Satış Raporları" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Satış Raporları" hata={gizliTemizle(e)} />;
   }
 
   const ciro = siparisler.reduce((t, o) => t + o.totalCents, 0);

@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { CIRO_DURUMLARI, ODEME, SIPARIS_DURUM, para, sayi, tarih, tarihSaat } from "@/lib/admin-ui";
 import { musteriKaydet, musteriSil } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { Bos, DUGME, Kart, Kutu, Rozet, Sayfa, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +38,7 @@ export default async function MusteriDetay({
       include: { orders: { orderBy: { createdAt: "desc" }, take: 50 } },
     });
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Müşteri" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Müşteri" hata={gizliTemizle(e)} />;
   }
   if (!m) notFound();
 

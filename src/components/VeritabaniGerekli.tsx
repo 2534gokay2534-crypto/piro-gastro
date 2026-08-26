@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 
 /**
  * Veritabanı bağlı değilken gösterilir.
@@ -85,7 +86,7 @@ npm run db:yayinla              # siteye yayınlar`}
         <details className="mt-6">
           <summary className="cursor-pointer text-[12.6px] text-steel-500">Teknik ayrıntı</summary>
           <pre className="mt-2 overflow-x-auto rounded bg-steel-50 p-3 font-mono text-[11.6px] text-steel-700">
-            {hata}
+            {gizliTemizle(hata)}
           </pre>
         </details>
       )}

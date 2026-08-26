@@ -4,6 +4,7 @@ import { db, dbVar } from "@/lib/db";
 import { LANG_DEFS, isLang } from "@/lib/i18n";
 import { ayarKaydet } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { DUGME, Kutu, Rozet, Sayfa } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +39,7 @@ export default async function Ayarlar({ params }: { params: Promise<{ lang: stri
   try {
     ayarlar = await db.setting.findMany();
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Ayarlar" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Ayarlar" hata={gizliTemizle(e)} />;
   }
 
   const a = new Map(ayarlar.map((x) => [x.key, x.value]));

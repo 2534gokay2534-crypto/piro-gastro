@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { para, sayi, tarihSaat, dilAdi} from "@/lib/admin-ui";
 import { stokGuncelle, topluIslem } from "@/app/actions/admin-urun";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import {
   AramaCubugu, Bos, DUGME, Kart, Kutu, Sayfa, Sayfalama, Secim, Tablo, Td, Th,
 } from "@/components/admin/UI";
@@ -67,7 +68,7 @@ export default async function StokPage({
       })(),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Stok Yönetimi" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Stok Yönetimi" hata={gizliTemizle(e)} />;
   }
 
   const sonSayfa = Math.max(1, Math.ceil(toplam / SAYFA));

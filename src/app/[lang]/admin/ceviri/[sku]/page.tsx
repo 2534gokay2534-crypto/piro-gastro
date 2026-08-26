@@ -4,6 +4,7 @@ import { db, dbVar } from "@/lib/db";
 import { isLang, type Lang } from "@/lib/i18n";
 import { urunMetniKaydet, ozellikMetniKaydet, kilidiAc } from "@/app/actions/ceviri";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export default async function CeviriDuzenle({
     });
     diller = await db.language.findMany({ where: { enabled: true }, orderBy: { sort: "asc" } });
   } catch (e) {
-    return <VeritabaniGerekli lang={l} sayfa="Çeviri düzenle" hata={String(e).slice(0, 300)} />;
+    return <VeritabaniGerekli lang={l} sayfa="Çeviri düzenle" hata={gizliTemizle(e)} />;
   }
   if (!urun) notFound();
   const metin = (kod: string) => urun.texts.find((t) => t.langCode === kod);

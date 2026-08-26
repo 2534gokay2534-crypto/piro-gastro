@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { CIRO_DURUMLARI, nezaman, para, sayi } from "@/lib/admin-ui";
 import { musteriKaydet } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import {
   AramaCubugu, Bos, DUGME, Kart, Kutu, Rozet, Sayfa, Sayfalama, Secim, Tablo, Td, Th,
 } from "@/components/admin/UI";
@@ -74,7 +75,7 @@ export default async function Musteriler({
       })(),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Müşteriler" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Müşteriler" hata={gizliTemizle(e)} />;
   }
 
   const sonSayfa = Math.max(1, Math.ceil(toplam / SAYFA));

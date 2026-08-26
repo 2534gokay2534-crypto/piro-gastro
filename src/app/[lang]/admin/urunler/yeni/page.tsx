@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { dilAdi } from "@/lib/admin-ui";
 import { urunEkle } from "@/app/actions/admin-urun";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { DUGME, Kutu, Sayfa } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +51,7 @@ export default async function YeniUrun({ params }: { params: Promise<{ lang: str
       db.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Yeni ürün" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Yeni ürün" hata={gizliTemizle(e)} />;
   }
 
   const anaKat = kategoriler.filter((c) => !c.parentId);

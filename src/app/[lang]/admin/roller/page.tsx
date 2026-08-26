@@ -6,6 +6,7 @@ import { sayi } from "@/lib/admin-ui";
 import { YETKILER } from "@/lib/admin-menu";
 import { rolKaydet, rolSil } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { Bos, DUGME, Kutu, Rozet, Sayfa, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +35,7 @@ export default async function Roller({
       include: { _count: { select: { users: true } } },
     });
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Roller ve Yetkiler" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Roller ve Yetkiler" hata={gizliTemizle(e)} />;
   }
 
   const duzenlenen = d ? roller.find((r) => r.id === d) : null;

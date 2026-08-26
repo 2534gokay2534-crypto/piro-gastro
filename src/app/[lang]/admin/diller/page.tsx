@@ -4,6 +4,7 @@ import { db, dbVar } from "@/lib/db";
 import { isLang, type Lang } from "@/lib/i18n";
 import { dilEkle, dilDurumu } from "@/app/actions/ceviri";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function DillerPage({ params }: { params: Promise<{ lang: s
     diller = await db.language.findMany({ orderBy: { sort: "asc" } });
     urunSayisi = await db.product.count();
   } catch (e) {
-    return <VeritabaniGerekli lang={l} sayfa="Diller" hata={String(e).slice(0, 300)} />;
+    return <VeritabaniGerekli lang={l} sayfa="Diller" hata={gizliTemizle(e)} />;
   }
 
   // dil başına kapsam

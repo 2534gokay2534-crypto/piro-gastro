@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { sayi } from "@/lib/admin-ui";
 import { tedarikciKaydet, tedarikciSil } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { AramaCubugu, Bos, DUGME, Kutu, Rozet, Sayfa, Tablo, Td, Th } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +46,7 @@ export default async function Tedarikciler({
       db.product.groupBy({ by: ["supplierId"], _count: { _all: true } }),
     ]);
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Tedarikçiler" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Tedarikçiler" hata={gizliTemizle(e)} />;
   }
 
   const say = new Map(urunSayilari.map((x) => [x.supplierId ?? "", x._count._all]));

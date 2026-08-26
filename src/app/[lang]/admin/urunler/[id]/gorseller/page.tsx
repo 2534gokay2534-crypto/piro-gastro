@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { dilAdi } from "@/lib/admin-ui";
 import { gorselAnaYap, gorselEkle, gorselSil, gorselTasi } from "@/app/actions/admin-urun";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import { Bos, DUGME, Kutu, Sayfa } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +46,7 @@ export default async function UrunGorselleri({
       },
     });
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Ürün görselleri" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Ürün görselleri" hata={gizliTemizle(e)} />;
   }
 
   if (!urun) notFound();

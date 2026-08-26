@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { ODEME, para, tarih } from "@/lib/admin-ui";
 import { kalemKaydet, kalemSil } from "@/app/actions/admin-genel";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import {
   AramaCubugu, Bos, DUGME, Kart, Kutu, Rozet, Sayfa, Sayfalama, Secim, Tablo, Td, Th,
 } from "@/components/admin/UI";
@@ -72,7 +73,7 @@ export default async function GelirGider({
     ]);
     if (sp.d) duzenlenen = await db.expense.findUnique({ where: { id: sp.d } });
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Gelir-Gider" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Gelir-Gider" hata={gizliTemizle(e)} />;
   }
 
   const sonSayfa = Math.max(1, Math.ceil(toplam / SAYFA));

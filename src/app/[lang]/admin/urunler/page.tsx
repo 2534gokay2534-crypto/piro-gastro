@@ -5,6 +5,7 @@ import { isLang } from "@/lib/i18n";
 import { para, sayi, dilAdi } from "@/lib/admin-ui";
 import { topluIslem } from "@/app/actions/admin-urun";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import Icon from "@/components/Icon";
 import UrunSatiri from "@/components/admin/UrunSatiri";
 import {
@@ -118,7 +119,7 @@ export default async function UrunlerPage({
       kartlar = k;
       ozet = { hepsi, yayinda, gizli: hepsi - yayinda, stoksuz, kampanya };
     } catch (e) {
-      return <VeritabaniGerekli lang={lang} sayfa="Ürünler" hata={String(e)} />;
+      return <VeritabaniGerekli lang={lang} sayfa="Ürünler" hata={gizliTemizle(e)} />;
     }
 
     return (
@@ -283,7 +284,7 @@ export default async function UrunlerPage({
     urunler = u;
     kategoriler = k.map((c) => ({ id: c.id, ad: c.ad, ikon: c.ikon, alt: c.alt }));
   } catch (e) {
-    return <VeritabaniGerekli lang={lang} sayfa="Ürünler" hata={String(e)} />;
+    return <VeritabaniGerekli lang={lang} sayfa="Ürünler" hata={gizliTemizle(e)} />;
   }
 
   const secili = kategoriler.find((c) => c.id === kat);

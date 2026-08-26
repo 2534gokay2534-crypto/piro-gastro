@@ -4,6 +4,7 @@ import { db, dbVar } from "@/lib/db";
 import { isLang, type Lang } from "@/lib/i18n";
 import { sohbetSil } from "@/app/actions/sohbet";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 import SohbetPaneli from "@/components/admin/SohbetPaneli";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +37,7 @@ export default async function SohbetDetay({
       include: { messages: { orderBy: { createdAt: "asc" } } },
     });
   } catch (e) {
-    return <VeritabaniGerekli lang={l} sayfa="Sohbet" hata={String(e)} />;
+    return <VeritabaniGerekli lang={l} sayfa="Sohbet" hata={gizliTemizle(e)} />;
   }
   if (!oturum) notFound();
 

@@ -5,6 +5,7 @@ import { isLang, type Lang } from "@/lib/i18n";
 import { AYAR_CEVRIMICI, AYAR_KARSILAMA } from "@/lib/sohbet";
 import { cevrimIciDegistir, karsilamaKaydet } from "@/app/actions/sohbet";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import { gizliTemizle } from "@/lib/gizli-temizle";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +77,7 @@ export default async function SohbetListe({
     acikSayi = acik;
     toplamSayi = toplam;
   } catch (e) {
-    return <VeritabaniGerekli lang={l} sayfa="Sohbetler" hata={String(e)} />;
+    return <VeritabaniGerekli lang={l} sayfa="Sohbetler" hata={gizliTemizle(e)} />;
   }
 
   const yanitBekleyen = oturumlar.filter(
