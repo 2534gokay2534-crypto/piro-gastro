@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ILETISIM, cevrimIciMi, karsilamaMetni, sohbetHazirMi } from "@/lib/sohbet";
+import { ILETISIM, cevrimIciMi, karsilamaMetni, veritabaniDurumu } from "@/lib/sohbet";
 import { korsEkle, onKontrol } from "@/lib/sohbet-cors";
 
 export const runtime = "nodejs";
@@ -20,10 +20,14 @@ export async function GET(req: Request) {
  * "mesaj bırak" kipine geçer.
  */
 async function islem() {
-  const hazir = await sohbetHazirMi();
+  const durum = await veritabaniDurumu();
+  const hazir = durum === "hazir";
   return NextResponse.json(
     {
       hazir,
+      // Bağlı değilse nereye bakılacağını söyleyen kaba kod.
+      // Adres, kimlik ve hata metni içermez.
+      ...(hazir ? {} : { neden: durum }),
       cevrimIci: hazir ? await cevrimIciMi() : false,
       karsilama: hazir ? await karsilamaMetni() : "",
       eposta: ILETISIM.eposta,
