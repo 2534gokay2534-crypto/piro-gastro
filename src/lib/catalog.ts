@@ -72,7 +72,41 @@ for (const c of CATS) {
 }
 for (const arr of childrenOf.values()) arr.sort((a, b) => a.sort - b.sort);
 
-const visible = PRODUCTS.filter((p) => !p.hidden);
+let visible = PRODUCTS.filter((p) => !p.hidden);
+
+/**
+ * Yönetici panelinden ürün değiştiğinde çağrılır.
+ *
+ * Katalog nesneleri ile mağazanın okuduğu nesneler AYNI referanslardır;
+ * bir ürünün alanını değiştirmek mağazaya anında yansır. Yalnızca
+ * "gizli" listesi önceden hesaplandığı için burada yenilenir.
+ */
+export function katalogYenile(): void {
+  visible = PRODUCTS.filter((p) => !p.hidden);
+}
+
+/** Katalogdaki ham ürün dizisi — yönetici tarafı için (yazma dahil). */
+export function hamUrunler(): Product[] {
+  return PRODUCTS;
+}
+
+/** Ürünü kimliğe göre indekse ekler (yeni ürün eklendiğinde). */
+export function katalogaEkle(p: Product): void {
+  PRODUCTS.push(p);
+  prodById.set(p.id, p);
+  prodBySlug.set(p.slug, p);
+  katalogYenile();
+}
+
+/** Ürünü katalogdan çıkarır (silindiğinde). */
+export function katalogdanCikar(id: string): void {
+  const n = PRODUCTS.findIndex((p) => p.id === id);
+  if (n < 0) return;
+  const [p] = PRODUCTS.splice(n, 1);
+  prodById.delete(p.id);
+  prodBySlug.delete(p.slug);
+  katalogYenile();
+}
 
 /* --- sorgular --- */
 

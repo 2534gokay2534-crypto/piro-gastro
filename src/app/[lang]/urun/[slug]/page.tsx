@@ -13,6 +13,8 @@ export const revalidate = 300;
 function getProduct(slug: string) {
   const p = productBySlug(slug);
   if (!p) return null;
+  // Yayından kaldırılmış ürün doğrudan adresle de açılmamalı.
+  if (p.hidden) return null;
   const category = categoryById(p.categoryId);
   if (!category) return null;
   return {

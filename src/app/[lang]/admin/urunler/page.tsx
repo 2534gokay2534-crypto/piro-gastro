@@ -2,34 +2,86 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db, dbVar } from "@/lib/db";
 import { isLang } from "@/lib/i18n";
-import { para, sayi, dilAdi} from "@/lib/admin-ui";
-import { topluIslem, yayinDegistir } from "@/app/actions/admin-urun";
+import { para, sayi, dilAdi } from "@/lib/admin-ui";
+import { topluIslem } from "@/app/actions/admin-urun";
 import VeritabaniGerekli from "@/components/VeritabaniGerekli";
+import Icon from "@/components/Icon";
+import UrunSatiri from "@/components/admin/UrunSatiri";
 import {
-  AramaCubugu,
-  Bos,
-  DUGME,
-  Kutu,
-  Rozet,
-  Sayfa,
-  Sayfalama,
-  Secim,
-  Tablo,
-  Td,
-  Th,
+  AramaCubugu, Bos, DUGME, Kart, Kutu, Sayfa, Sayfalama, Secim,
 } from "@/components/admin/UI";
 
 export const dynamic = "force-dynamic";
 
-const SAYFA = 50;
+const SAYFA = 24;
 
 type Ara = {
   q?: string;
-  k?: string; // kategori
-  d?: string; // durum
-  s?: string; // sayfa
+  k?: string;   // kategori
+  a?: string;   // alt kategori
+  d?: string;   // durum
+  s?: string;   // sayfa
   sir?: string; // sıralama
 };
+
+/**
+ * SÜPER ADMIN — ÜRÜNLER
+ *
+ * İki görünüm:
+ *   1) Kategori kartları — ikonlu, yönetici uyarılarıyla (stok yok, gizli,
+ *      indirimli, liste değeri). Müşteri menüsünün kopyası değildir.
+ *   2) Ürün listesi — seçilen kategorinin ürünleri; fiyat, indirim, stok,
+ *      yayın durumu, kategori ve görseller satırın içinden yönetilir.
+ *
+ * Buradaki her değişiklik mağazaya anında yansır (katalog nesnesi yerinde
+ * güncellenir, ayrıca catalog.json'a yazılır).
+ */
+
+async function kategoriOzetleri(lang: string) {
+  const [kategoriler, sayimlar, gizliler, stoksuzlar, kampanyalilar, degerler] = await Promise.all([
+    db.category.findMany({
+      orderBy: { sort: "asc" },
+      select: {
+        id: true, parentId: true, icon: true, slug: true,
+        texts: { where: { langCode: { in: [lang, "en"] } }, select: { name: true, langCode: true } },
+      },
+    }),
+    db.product.groupBy({ by: ["categoryId"], _count: { _all: true } }),
+    db.product.groupBy({ by: ["categoryId"], where: { hidden: true }, _count: { _all: true } }),
+    db.product.groupBy({ by: ["categoryId"], where: { stock: { lte: 0 }, onRequest: false }, _count: { _all: true } }),
+    db.product.groupBy({ by: ["categoryId"], where: { campaignOn: true }, _count: { _all: true } }),
+    db.product.groupBy({ by: ["categoryId"], _sum: { priceCents: true } }),
+  ]);
+
+  const say = (l: Array<{ categoryId: string; _count: { _all: number } }>) =>
+    new Map(l.map((x) => [x.categoryId, x._count._all]));
+
+  const toplam = say(sayimlar);
+  const gizli = say(gizliler);
+  const stoksuz = say(stoksuzlar);
+  const kampanya = say(kampanyalilar);
+  const deger = new Map(degerler.map((x) => [x.categoryId, x._sum.priceCents ?? 0]));
+
+  const ana = kategoriler.filter((c) => !c.parentId);
+
+  return ana.map((c) => {
+    const altlar = kategoriler.filter((x) => x.parentId === c.id);
+    const ids = [c.id, ...altlar.map((a) => a.id)];
+    const topla = (m: Map<string, number>) => ids.reduce((t, id) => t + (m.get(id) ?? 0), 0);
+
+    return {
+      id: c.id,
+      ad: dilAdi(c.texts, lang, c.slug),
+      ikon: c.icon ?? "grid",
+      urun: topla(toplam),
+      gizli: topla(gizli),
+      stoksuz: topla(stoksuz),
+      kampanya: topla(kampanya),
+      deger: topla(deger),
+      alt: altlar.map((a) => ({ id: a.id, ad: dilAdi(a.texts, lang, a.slug), urun: toplam.get(a.id) ?? 0 })),
+    };
+  });
+}
 
 export default async function UrunlerPage({
   params,
@@ -46,28 +98,138 @@ export default async function UrunlerPage({
   const kok = `/${lang}/admin/urunler`;
   const q = (sp.q ?? "").trim();
   const kat = sp.k ?? "";
+  const alt = sp.a ?? "";
   const durum = sp.d ?? "";
-  const sayfa = Math.max(1, Number(sp.s) || 1);
+  const sayfaNo = Math.max(1, Number(sp.s) || 1);
   const sir = sp.sir ?? "yeni";
 
-  /* ---- süzgeç ---- */
+  /* ============ 1) KATEGORİ KARTLARI ============ */
+  if (!kat && !q && !durum) {
+    let kartlar: Awaited<ReturnType<typeof kategoriOzetleri>> = [];
+    let ozet = { hepsi: 0, yayinda: 0, gizli: 0, stoksuz: 0, kampanya: 0 };
+    try {
+      const [k, hepsi, yayinda, stoksuz, kampanya] = await Promise.all([
+        kategoriOzetleri(lang),
+        db.product.count(),
+        db.product.count({ where: { hidden: false } }),
+        db.product.count({ where: { stock: { lte: 0 }, onRequest: false } }),
+        db.product.count({ where: { campaignOn: true } }),
+      ]);
+      kartlar = k;
+      ozet = { hepsi, yayinda, gizli: hepsi - yayinda, stoksuz, kampanya };
+    } catch (e) {
+      return <VeritabaniGerekli lang={lang} sayfa="Ürünler" hata={String(e)} />;
+    }
+
+    return (
+      <Sayfa
+        baslik="Ürünler"
+        ozet={`${sayi(ozet.hepsi)} ürün · ${sayi(kartlar.length)} kategori`}
+        eylem={
+          <>
+            <Link href={`/${lang}/admin/kategoriler`} className={DUGME.sade}>Kategoriler</Link>
+            <Link href={`${kok}/yeni`} className={DUGME.ana}>+ Yeni ürün</Link>
+          </>
+        }
+      >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Kart etiket="Toplam ürün" deger={sayi(ozet.hepsi)} alt={`${sayi(ozet.yayinda)} yayında`} />
+          <Kart etiket="Yayından kaldırılmış" deger={sayi(ozet.gizli)} renk={ozet.gizli ? "warn" : "ok"} />
+          <Kart etiket="Stokta yok" deger={sayi(ozet.stoksuz)} renk={ozet.stoksuz ? "danger" : "ok"} />
+          <Kart etiket="İndirimli" deger={sayi(ozet.kampanya)} renk={ozet.kampanya ? "gold" : "navy"} />
+        </div>
+
+        <div className="mt-4">
+          <AramaCubugu eylem={kok} q="" yerTutucu="Tüm kategorilerde ürün adı veya stok kodu ara…">
+            <button type="submit" className={DUGME.koyu}>Ara</button>
+          </AramaCubugu>
+        </div>
+
+        <h2 className="mt-5 mb-2 text-[15px] font-extrabold text-navy-900">Kategori seçin</h2>
+
+        {kartlar.length === 0 ? (
+          <Bos metin="Kategori yok. Önce Kategoriler ekranından kategori oluşturun." />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {kartlar.map((c) => (
+              <Link
+                key={c.id}
+                href={`${kok}?k=${c.id}`}
+                className="group flex flex-col rounded-[12px] border border-steel-200 bg-white p-4 transition hover:border-gold hover:shadow-c2"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-navy-950 text-gold transition group-hover:bg-gold group-hover:text-navy-950">
+                    <Icon name={c.ikon} className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[14.4px] font-extrabold leading-snug text-navy-900">{c.ad}</span>
+                    <span className="mt-0.5 block text-[12.4px] text-steel-500">
+                      {sayi(c.urun)} ürün{c.alt.length > 0 && ` · ${c.alt.length} alt kategori`}
+                    </span>
+                  </span>
+                </div>
+
+                {/* yönetici uyarıları — müşteri menüsünde olmayan bilgiler */}
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {c.stoksuz > 0 && (
+                    <span className="rounded bg-red-50 px-1.5 py-0.5 text-[10.8px] font-bold text-danger">
+                      {sayi(c.stoksuz)} stok yok
+                    </span>
+                  )}
+                  {c.gizli > 0 && (
+                    <span className="rounded bg-steel-100 px-1.5 py-0.5 text-[10.8px] font-bold text-steel-600">
+                      {sayi(c.gizli)} gizli
+                    </span>
+                  )}
+                  {c.kampanya > 0 && (
+                    <span className="rounded bg-gold-200 px-1.5 py-0.5 text-[10.8px] font-bold text-gold-800">
+                      {sayi(c.kampanya)} indirimli
+                    </span>
+                  )}
+                  {c.urun > 0 && c.stoksuz === 0 && c.gizli === 0 && c.kampanya === 0 && (
+                    <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10.8px] font-bold text-ok">sorun yok</span>
+                  )}
+                </div>
+
+                <div className="mt-auto flex items-end justify-between pt-3">
+                  <span className="text-[11.4px] text-steel-500">
+                    liste değeri <b className="text-navy-900">{para(c.deger, false)}</b>
+                  </span>
+                  <span className="text-[12.4px] font-bold text-navy-600 transition group-hover:text-gold">Yönet →</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href={`${kok}?d=stokyok`} className={DUGME.sade}>Stokta olmayanlar</Link>
+          <Link href={`${kok}?d=gizli`} className={DUGME.sade}>Yayından kaldırılanlar</Link>
+          <Link href={`${kok}?d=kampanya`} className={DUGME.sade}>İndirimli ürünler</Link>
+          <Link href={`${kok}?d=azstok`} className={DUGME.sade}>Az stoklular</Link>
+        </div>
+      </Sayfa>
+    );
+  }
+
+  /* ============ 2) ÜRÜN LİSTESİ ============ */
+
   const kosul: Record<string, unknown> = {};
-  if (kat) kosul.OR = [{ categoryId: kat }, { subId: kat }];
+  if (alt) kosul.subId = alt;
+  else if (kat) kosul.OR = [{ categoryId: kat }, { subId: kat }];
   if (durum === "yayinda") kosul.hidden = false;
   if (durum === "gizli") kosul.hidden = true;
   if (durum === "stokyok") { kosul.stock = { lte: 0 }; kosul.onRequest = false; }
   if (durum === "azstok") { kosul.stock = { gt: 0, lte: 5 }; }
   if (durum === "kampanya") kosul.campaignOn = true;
   if (q) {
-    kosul.AND = [
-      {
-        OR: [
-          { sku: { contains: q } },
-          { slug: { contains: q } },
-          { texts: { some: { name: { contains: q } } } },
-        ],
-      },
-    ];
+    kosul.AND = [{
+      OR: [
+        { sku: { contains: q } },
+        { slug: { contains: q } },
+        { texts: { some: { name: { contains: q } } } },
+      ],
+    }];
   }
 
   const siralama =
@@ -82,351 +244,224 @@ export default async function UrunlerPage({
     id: string; sku: string; slug: string; priceCents: number; costCents: number;
     stock: number; threshold: number; hidden: boolean; featured: boolean;
     onRequest: boolean; campaignOn: boolean; campaignPercent: number; sold: number;
-    categoryId: string;
+    categoryId: string; subId: string | null;
     texts: Array<{ name: string; langCode: string }>;
     images: Array<{ url: string }>;
-    category: { id: string; texts: Array<{ name: string }> };
+    _count: { images: number };
   }> = [];
-  let kategoriler: Array<{ id: string; ad: string; sayi: number; alt: Array<{ id: string; ad: string; sayi: number }> }> = [];
-  let ozet = { hepsi: 0, yayinda: 0, gizli: 0, stokyok: 0 };
+  let kategoriler: Array<{ id: string; ad: string; ikon: string; alt: Array<{ id: string; ad: string; urun: number }> }> = [];
 
   try {
-    [toplam, urunler] = await Promise.all([
+    const [t, u, k] = await Promise.all([
       db.product.count({ where: kosul }),
       db.product.findMany({
         where: kosul,
         orderBy: siralama,
-        skip: (sayfa - 1) * SAYFA,
+        skip: (sayfaNo - 1) * SAYFA,
         take: SAYFA,
-        include: {
-          texts: { where: { langCode: { in: [lang, "en"] } }, select: { name: true, langCode: true } },
-          images: { take: 1, select: { url: true } },
-          category: { select: { id: true, texts: { where: { langCode: { in: [lang, "en"] } }, select: { name: true, langCode: true } } } },
-        },
-      }),
-    ]);
-
-    const [anaKat, sayimlar, hepsi, yayinda, stokyok] = await Promise.all([
-      db.category.findMany({
-        orderBy: { sort: "asc" },
         select: {
-          id: true, parentId: true,
+          id: true, sku: true, slug: true, priceCents: true, costCents: true,
+          stock: true, threshold: true, hidden: true, featured: true,
+          onRequest: true, campaignOn: true, campaignPercent: true, sold: true,
+          categoryId: true, subId: true,
           texts: { where: { langCode: { in: [lang, "en"] } }, select: { name: true, langCode: true } },
+          images: { take: 1, orderBy: { sort: "asc" }, select: { url: true } },
+          _count: { select: { images: true } },
         },
       }),
-      db.product.groupBy({ by: ["categoryId"], _count: { _all: true } }),
-      db.product.count(),
-      db.product.count({ where: { hidden: false } }),
-      db.product.count({ where: { stock: { lte: 0 }, onRequest: false } }),
+      kategoriOzetleri(lang),
     ]);
-
-    const sayimHarita = new Map(sayimlar.map((x) => [x.categoryId, x._count._all]));
-    const ad = (t: Array<{ name: string; langCode?: string }>) => dilAdi(t, lang);
-    kategoriler = anaKat
-      .filter((c) => !c.parentId)
-      .map((c) => ({
-        id: c.id,
-        ad: ad(c.texts),
-        sayi: sayimHarita.get(c.id) ?? 0,
-        alt: anaKat
-          .filter((x) => x.parentId === c.id)
-          .map((x) => ({ id: x.id, ad: ad(x.texts), sayi: sayimHarita.get(x.id) ?? 0 })),
-      }));
-
-    ozet = { hepsi, yayinda, gizli: hepsi - yayinda, stokyok };
+    toplam = t;
+    urunler = u;
+    kategoriler = k.map((c) => ({ id: c.id, ad: c.ad, ikon: c.ikon, alt: c.alt }));
   } catch (e) {
     return <VeritabaniGerekli lang={lang} sayfa="Ürünler" hata={String(e)} />;
   }
 
+  const secili = kategoriler.find((c) => c.id === kat);
+  const seciliAlt = secili?.alt.find((a) => a.id === alt);
   const sonSayfa = Math.max(1, Math.ceil(toplam / SAYFA));
-  const url = (ek: Record<string, string | number>) => {
+
+  // İşlem sonrası dönülecek adres — süzgeçler korunsun
+  const sorgu = (s: number) => {
     const p = new URLSearchParams();
     if (q) p.set("q", q);
     if (kat) p.set("k", kat);
+    if (alt) p.set("a", alt);
     if (durum) p.set("d", durum);
+    if (s > 1) p.set("s", String(s));
     if (sir !== "yeni") p.set("sir", sir);
-    for (const [a, b] of Object.entries(ek)) {
-      if (b === "" || b === undefined) p.delete(a);
-      else p.set(a, String(b));
-    }
-    const qs = p.toString();
-    return qs ? `${kok}?${qs}` : kok;
+    return p.toString() ? `${kok}?${p.toString()}` : kok;
   };
+  const geriAdres = sorgu(sayfaNo);
 
-  const urunAdi = (t: Array<{ name: string; langCode: string }>) =>
-    t.find((x) => x.langCode === lang)?.name ?? t[0]?.name ?? "—";
+  const baslik = seciliAlt?.ad ?? secili?.ad ?? (q ? `“${q}” araması` : "Süzülmüş ürünler");
 
   return (
     <Sayfa
-      baslik="Ürünler"
-      ozet={
-        <>
-          {sayi(ozet.hepsi)} ürün · {sayi(ozet.yayinda)} yayında · {sayi(ozet.gizli)} gizli ·{" "}
-          <b className="text-danger">{sayi(ozet.stokyok)} stokta yok</b>
-        </>
-      }
+      baslik={baslik}
+      ozet={`${sayi(toplam)} ürün${secili && !seciliAlt ? " · alt kategoriler dahil" : ""}`}
       eylem={
         <>
-          <Link href={`${kok}/yeni`} className={DUGME.ana}>
-            + Yeni ürün ekle
-          </Link>
-          <Link href={`/${lang}/admin/kategoriler`} className={DUGME.koyu}>
-            Yeni kategori oluştur
-          </Link>
-          <a
-            href={`/api/admin/disa-aktar?tip=urunler&lang=${lang}${kat ? `&k=${kat}` : ""}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
-            className={DUGME.sade}
-          >
-            Dışa aktar (CSV)
-          </a>
+          <Link href={kok} className={DUGME.sade}>← Kategoriler</Link>
+          <Link href={`${kok}/yeni`} className={DUGME.ana}>+ Yeni ürün</Link>
         </>
       }
     >
-      <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
-        {/* ---------- kategori ağacı ---------- */}
-        <Kutu className="h-max overflow-hidden">
-          <div className="border-b border-steel-200 px-3.5 py-2.5 text-[11.6px] font-bold uppercase tracking-wider text-steel-600">
-            Kategoriler
-          </div>
-          <div className="max-h-[70vh] overflow-y-auto py-1.5">
+      {/* --- kategori şeridi --- */}
+      {secili && (
+        <Kutu className="mb-4 p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-navy-950 text-gold">
+              <Icon name={secili.ikon} className="h-4 w-4" />
+            </span>
             <Link
-              href={url({ k: "", s: 1 })}
+              href={`${kok}?k=${secili.id}`}
               className={
-                "flex items-center justify-between px-3.5 py-1.5 text-[13px] transition hover:bg-steel-50 " +
-                (!kat ? "font-bold text-navy-900" : "text-steel-700")
+                "rounded-full px-3 py-1 text-[12.6px] font-bold transition " +
+                (!alt ? "bg-navy-900 text-white" : "bg-steel-100 text-steel-700 hover:bg-steel-200")
               }
             >
-              <span>Tüm ürünler</span>
-              <span className="tabular-nums text-[11.6px] text-steel-500">{sayi(ozet.hepsi)}</span>
+              Tümü
             </Link>
-            {kategoriler.map((c) => (
-              <div key={c.id}>
-                <Link
-                  href={url({ k: c.id, s: 1 })}
-                  className={
-                    "flex items-center justify-between px-3.5 py-1.5 text-[13px] transition hover:bg-steel-50 " +
-                    (kat === c.id ? "bg-steel-50 font-bold text-navy-900" : "text-steel-700")
-                  }
-                >
-                  <span className="truncate">{c.ad}</span>
-                  <span className="tabular-nums text-[11.6px] text-steel-500">{sayi(c.sayi)}</span>
-                </Link>
-                {c.alt.length > 0 && (kat === c.id || c.alt.some((a) => a.id === kat)) && (
-                  <div className="pb-1">
-                    {c.alt.map((a) => (
-                      <Link
-                        key={a.id}
-                        href={url({ k: a.id, s: 1 })}
-                        className={
-                          "flex items-center justify-between py-1 pl-7 pr-3.5 text-[12.4px] transition hover:bg-steel-50 " +
-                          (kat === a.id ? "font-bold text-navy-900" : "text-steel-600")
-                        }
-                      >
-                        <span className="truncate">{a.ad}</span>
-                        <span className="tabular-nums text-[11.2px] text-steel-500">{sayi(a.sayi)}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {secili.alt.map((a) => (
+              <Link
+                key={a.id}
+                href={`${kok}?k=${secili.id}&a=${a.id}`}
+                className={
+                  "rounded-full px-3 py-1 text-[12.6px] font-bold transition " +
+                  (alt === a.id ? "bg-navy-900 text-white" : "bg-steel-100 text-steel-700 hover:bg-steel-200")
+                }
+              >
+                {a.ad} <span className="opacity-60">{a.urun}</span>
+              </Link>
             ))}
           </div>
         </Kutu>
+      )}
 
-        {/* ---------- liste ---------- */}
-        <div className="min-w-0">
-          <AramaCubugu
-            eylem={kok}
-            q={q}
-            yerTutucu="Ürün adı, stok kodu…"
-            gizli={{ k: kat }}
-          >
-            <Secim
-              ad="d"
-              deger={durum}
-              etiket="Durum"
-              secenekler={[
-                { v: "", a: "Tümü" },
-                { v: "yayinda", a: "Yayında" },
-                { v: "gizli", a: "Gizli" },
-                { v: "stokyok", a: "Stokta yok" },
-                { v: "azstok", a: "Az stok" },
-                { v: "kampanya", a: "Kampanyalı" },
-              ]}
-            />
-            <Secim
-              ad="sir"
-              deger={sir}
-              etiket="Sırala"
-              secenekler={[
-                { v: "yeni", a: "En yeni" },
-                { v: "fiyatArtan", a: "Fiyat ↑" },
-                { v: "fiyatAzalan", a: "Fiyat ↓" },
-                { v: "stokAz", a: "Stok azdan" },
-                { v: "cokSatan", a: "Çok satan" },
-              ]}
-            />
-          </AramaCubugu>
+      {/* --- arama ve süzgeç --- */}
+      <AramaCubugu eylem={kok} q={q} yerTutucu="Ürün adı veya stok kodu ara…" gizli={{ k: kat, a: alt }}>
+        <Secim
+          ad="d"
+          deger={durum}
+          secenekler={[
+            { v: "", a: "Tüm durumlar" },
+            { v: "yayinda", a: "Yayında" },
+            { v: "gizli", a: "Gizli" },
+            { v: "stokyok", a: "Stokta yok" },
+            { v: "azstok", a: "Az stok" },
+            { v: "kampanya", a: "İndirimli" },
+          ]}
+        />
+        <Secim
+          ad="sir"
+          deger={sir}
+          secenekler={[
+            { v: "yeni", a: "En yeni" },
+            { v: "fiyatArtan", a: "Fiyat ↑" },
+            { v: "fiyatAzalan", a: "Fiyat ↓" },
+            { v: "stokAz", a: "Stok azdan" },
+            { v: "cokSatan", a: "Çok satan" },
+          ]}
+        />
+        <button type="submit" className={DUGME.koyu}>Uygula</button>
+        {(q || durum || alt) && (
+          <Link href={kat ? `${kok}?k=${kat}` : kok} className="text-[12.6px] font-semibold text-steel-500 hover:text-gold">
+            Temizle
+          </Link>
+        )}
+      </AramaCubugu>
 
-          {urunler.length === 0 ? (
-            <div className="mt-4">
-              <Bos metin="Bu süzgeçle ürün bulunamadı." />
-            </div>
-          ) : (
-            <form action={topluIslem} className="mt-4">
-              {/* toplu işlem çubuğu */}
-              <Kutu className="mb-3 flex flex-wrap items-center gap-2 p-3">
-                <span className="text-[12.4px] font-bold text-steel-700">Seçilenlere:</span>
-                <select
-                  name="islem"
-                  defaultValue="yayinla"
-                  className="rounded-[8px] border border-steel-300 bg-white px-2.5 py-1.5 text-[13px] outline-none focus:border-navy-500"
-                >
+      {urunler.length === 0 ? (
+        <div className="mt-4">
+          <Bos metin="Bu süzgeçle ürün bulunamadı." />
+        </div>
+      ) : (
+        <>
+          {/* --- ürün satırları ---
+              Onay kutuları HTML5 form özniteliğiyle aşağıdaki toplu işlem
+              formuna bağlanır; böylece satır içi formlar iç içe girmez. */}
+          <div className="mt-4 space-y-2">
+            {urunler.map((u) => (
+              <div key={u.id} className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  name="sec"
+                  value={u.id}
+                  aria-label={`${u.sku} seç`}
+                  form="topluForm"
+                  className="mt-4 h-4 w-4 shrink-0 accent-navy-700"
+                />
+                <div className="min-w-0 flex-1">
+                  <UrunSatiri
+                    lang={lang}
+                    geriDon={geriAdres}
+                    kategoriler={kategoriler}
+                    u={{
+                      id: u.id, sku: u.sku, slug: u.slug,
+                      priceCents: u.priceCents, costCents: u.costCents,
+                      stock: u.stock, threshold: u.threshold,
+                      hidden: u.hidden, featured: u.featured, onRequest: u.onRequest,
+                      campaignOn: u.campaignOn, campaignPercent: u.campaignPercent, sold: u.sold,
+                      categoryId: u.categoryId, subId: u.subId,
+                      ad: dilAdi(u.texts, lang, u.sku),
+                      gorsel: u.images[0]?.url ?? null,
+                      gorselSayisi: u._count.images,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* --- toplu işlem --- */}
+          <form id="topluForm" action={topluIslem} className="mt-4 rounded-[10px] border border-steel-200 bg-white p-4">
+            <h3 className="text-[13.4px] font-extrabold text-navy-900">Seçili ürünlere toplu işlem</h3>
+            <div className="mt-2.5 flex flex-wrap items-end gap-2.5">
+              <label className="block">
+                <span className="block text-[11.4px] font-bold text-navy-900">İşlem</span>
+                <select name="islem" className="mt-1 rounded-[8px] border border-steel-300 px-3 py-2 text-[13px] outline-none focus:border-navy-500">
                   <option value="yayinla">Yayına al</option>
                   <option value="gizle">Yayından kaldır</option>
                   <option value="oneCikar">Öne çıkar</option>
                   <option value="oneCikarma">Öne çıkarmayı kaldır</option>
-                  <option value="kategori">Kategori değiştir</option>
                   <option value="fiyatYuzde">Fiyatı yüzde değiştir</option>
-                  <option value="stokAyarla">Stok ayarla</option>
-                  <option value="sil">Sil</option>
+                  <option value="stokAyarla">Stoğu ayarla</option>
+                  <option value="kategori">Kategori değiştir</option>
                 </select>
-                <select
-                  name="hedefKategori"
-                  defaultValue=""
-                  className="rounded-[8px] border border-steel-300 bg-white px-2.5 py-1.5 text-[12.6px] outline-none focus:border-navy-500"
-                >
+              </label>
+              <label className="block">
+                <span className="block text-[11.4px] font-bold text-navy-900">Yüzde</span>
+                <input name="yuzde" placeholder="−10" className="mt-1 w-[92px] rounded-[8px] border border-steel-300 px-3 py-2 text-[13px] outline-none focus:border-navy-500" />
+              </label>
+              <label className="block">
+                <span className="block text-[11.4px] font-bold text-navy-900">Yeni stok</span>
+                <input name="yeniStok" placeholder="25" className="mt-1 w-[92px] rounded-[8px] border border-steel-300 px-3 py-2 text-[13px] outline-none focus:border-navy-500" />
+              </label>
+              <label className="block">
+                <span className="block text-[11.4px] font-bold text-navy-900">Hedef kategori</span>
+                <select name="hedefKategori" className="mt-1 rounded-[8px] border border-steel-300 px-3 py-2 text-[13px] outline-none focus:border-navy-500">
                   <option value="">— kategori —</option>
                   {kategoriler.map((c) => (
-                    <optgroup key={c.id} label={c.ad}>
-                      <option value={c.id}>{c.ad}</option>
-                      {c.alt.map((a) => (
-                        <option key={a.id} value={a.id}>
-                          &nbsp;&nbsp;{a.ad}
-                        </option>
-                      ))}
-                    </optgroup>
+                    <option key={c.id} value={c.id}>{c.ad}</option>
                   ))}
                 </select>
-                <input
-                  name="yuzde"
-                  placeholder="% (örn -10)"
-                  className="w-[110px] rounded-[8px] border border-steel-300 px-2.5 py-1.5 text-[12.6px] outline-none focus:border-navy-500"
-                />
-                <input
-                  name="yeniStok"
-                  placeholder="stok"
-                  className="w-[80px] rounded-[8px] border border-steel-300 px-2.5 py-1.5 text-[12.6px] outline-none focus:border-navy-500"
-                />
-                <button type="submit" className={DUGME.koyu}>
-                  Uygula
-                </button>
-              </Kutu>
+              </label>
+              <button type="submit" className={DUGME.tehlike}>Seçililere uygula</button>
+            </div>
+            <p className="mt-2 text-[11.8px] text-steel-500">
+              İşlem yalnızca yukarıda kutusunu işaretlediğiniz ürünlere uygulanır.
+            </p>
+          </form>
+        </>
+      )}
 
-              <Tablo>
-                <thead>
-                  <tr>
-                    <Th w="34px" orta>
-                      <span className="sr-only">Seç</span>
-                    </Th>
-                    <Th>Ürün</Th>
-                    <Th w="170px">Kategori</Th>
-                    <Th w="130px" sag>Fiyat</Th>
-                    <Th w="110px" orta>Stok</Th>
-                    <Th w="150px">Durum</Th>
-                    <Th w="90px" sag>İşlem</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {urunler.map((p) => {
-                    const ad = urunAdi(p.texts);
-                    const stokYok = !p.onRequest && p.stock <= 0;
-                    const azStok = !p.onRequest && p.stock > 0 && p.stock <= Math.max(p.threshold, 5);
-                    return (
-                      <tr key={p.id} className="hover:bg-steel-50">
-                        <Td orta>
-                          <input
-                            type="checkbox"
-                            name="sec"
-                            value={p.id}
-                            aria-label={`${ad} seç`}
-                            className="h-4 w-4 accent-navy-600"
-                          />
-                        </Td>
-                        <Td>
-                          <div className="flex items-center gap-2.5">
-                            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[6px] border border-steel-200 bg-steel-50">
-                              {p.images[0]?.url ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={p.images[0].url} alt="" className="h-full w-full object-contain" />
-                              ) : (
-                                <span className="text-[9px] leading-tight text-steel-400">görsel<br />yok</span>
-                              )}
-                            </span>
-                            <span className="min-w-0">
-                              <Link
-                                href={`${kok}/${p.id}`}
-                                className="block truncate font-semibold text-navy-900 hover:text-gold"
-                              >
-                                {ad}
-                              </Link>
-                              <span className="block font-mono text-[11.4px] text-steel-500">{p.sku}</span>
-                            </span>
-                          </div>
-                        </Td>
-                        <Td className="text-[12.4px] text-steel-700">
-                          {dilAdi(p.category.texts, lang)}
-                        </Td>
-                        <Td sag>
-                          <div className="font-semibold tabular-nums text-navy-900">{para(p.priceCents)}</div>
-                          {p.campaignOn && p.campaignPercent > 0 && (
-                            <div className="text-[11px] font-bold text-danger">−%{p.campaignPercent}</div>
-                          )}
-                        </Td>
-                        <Td orta>
-                          <span
-                            className={
-                              "inline-block min-w-[36px] rounded px-1.5 py-0.5 text-[12.4px] font-bold tabular-nums " +
-                              (p.onRequest
-                                ? "bg-steel-100 text-steel-600"
-                                : stokYok
-                                  ? "bg-red-50 text-danger"
-                                  : azStok
-                                    ? "bg-amber-50 text-warn"
-                                    : "bg-emerald-50 text-ok")
-                            }
-                          >
-                            {p.onRequest ? "sipariş" : p.stock}
-                          </span>
-                        </Td>
-                        <Td>
-                          <div className="flex flex-wrap gap-1">
-                            <Rozet ton={p.hidden ? "gri" : "ok"}>{p.hidden ? "Gizli" : "Yayında"}</Rozet>
-                            {p.featured && <Rozet ton="gold">Öne çıkan</Rozet>}
-                          </div>
-                        </Td>
-                        <Td sag>
-                          <Link
-                            href={`${kok}/${p.id}`}
-                            className="text-[12.4px] font-bold text-navy-600 hover:text-gold"
-                          >
-                            Düzenle
-                          </Link>
-                        </Td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </Tablo>
-            </form>
-          )}
-
-          <Sayfalama sayfa={sayfa} sonSayfa={sonSayfa} toplam={toplam} url={(x) => url({ s: x })} />
-
-          {/* hızlı yayın açma/kapama — toplu formun dışında ayrı form */}
-          <form action={yayinDegistir} className="hidden" />
+      {sonSayfa > 1 && (
+        <div className="mt-4">
+          <Sayfalama sayfa={sayfaNo} sonSayfa={sonSayfa} toplam={toplam} url={sorgu} />
         </div>
-      </div>
+      )}
     </Sayfa>
   );
 }

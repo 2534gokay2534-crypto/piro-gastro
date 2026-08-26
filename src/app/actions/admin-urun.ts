@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db, dbVar } from "@/lib/db";
+import { urunleriYansit, urunuKaldir, urunuYansit } from "@/lib/katalog-yaz";
 
 /**
  * ÜRÜN YÖNETİMİ — Süper Admin.
@@ -21,6 +22,13 @@ const kurusa = (v: FormDataEntryValue | null) => {
   const n = Number(String(v ?? "").replace(/\s/g, "").replace(",", "."));
   return Number.isFinite(n) ? Math.round(n * 100) : 0;
 };
+
+/** İşlem sonrası dönülecek adres — yalnızca kendi /admin yollarımız. */
+function geriDon(formData: FormData): string | null {
+  const y = String(formData.get("geri") ?? "").trim();
+  if (!y.startsWith("/") || y.startsWith("//") || y.includes("\\")) return null;
+  return /^\/[^/]+\/admin\//.test(y) ? y : null;
+}
 
 async function log(action: string, detail: string) {
   try {
@@ -173,6 +181,7 @@ export async function urunSil(formData: FormData) {
   const p = await db.product.findUnique({ where: { id }, select: { sku: true } });
   await db.product.delete({ where: { id } }).catch(() => null);
   await log("urun.sil", p?.sku ?? id);
+  urunuKaldir(id);
   revalidatePath("/", "layout");
   if (geri) redirect(geri);
 }
@@ -184,8 +193,12 @@ export async function fiyatDegistir(formData: FormData) {
   const fiyat = kurusa(formData.get("fiyat"));
   if (!id) return;
   await db.product.update({ where: { id }, data: { priceCents: fiyat } });
+  urunuYansit(id, { priceCents: fiyat });
   await log("urun.fiyat", `${id} → ${(fiyat / 100).toFixed(2)}`);
   revalidatePath("/", "layout");
+
+  const geri = geriDon(formData);
+  if (geri) redirect(geri);
 }
 
 /** Hızlı stok güncelleme (liste satırından). */
@@ -198,9 +211,13 @@ export async function stokGuncelle(formData: FormData) {
   const p = await db.product.findUnique({ where: { id }, select: { stock: true, sku: true } });
   if (!p) return;
   await db.product.update({ where: { id }, data: { stock: stok } });
+  urunuYansit(id, { stock: stok });
   await stokHareketi(id, p.sku, p.stock, stok, "correction", "hızlı güncelleme");
   await log("stok.guncelle", `${p.sku}: ${p.stock} → ${stok}`);
   revalidatePath("/", "layout");
+
+  const geri = geriDon(formData);
+  if (geri) redirect(geri);
 }
 
 /** Yayına al / yayından kaldır. */
@@ -210,8 +227,12 @@ export async function yayinDegistir(formData: FormData) {
   const yayinda = s(formData.get("yayinda"), 2) === "1";
   if (!id) return;
   await db.product.update({ where: { id }, data: { hidden: !yayinda } });
+  urunuYansit(id, { hidden: !yayinda });
   await log("urun.yayin", `${id} → ${yayinda ? "yayında" : "gizli"}`);
   revalidatePath("/", "layout");
+
+  const geri = geriDon(formData);
+  if (geri) redirect(geri);
 }
 
 /* ---------------------------------------------------------------
@@ -287,5 +308,190 @@ export async function topluIslem(formData: FormData) {
   }
 
   await log("urun.toplu", `${islem} · ${idler.length} ürün`);
+  // Toplu değişikliği katalog nesnelerine de yansıt — mağaza anında görsün.
+  try {
+    const guncel = await db.product.findMany({
+      where: { id: { in: idler } },
+      select: {
+        id: true, priceCents: true, stock: true, hidden: true, featured: true,
+        campaignOn: true, campaignPercent: true, categoryId: true, subId: true,
+      },
+    });
+    urunleriYansit(guncel.map((p) => ({ id: p.id, degisiklik: p })));
+  } catch {
+    /* katalog tazelenemezse veritabanı yine doğru; sonraki okumada düzelir */
+  }
+
   revalidatePath("/", "layout");
+}
+
+/* ---------------------------------------------------------------
+   HIZLI İŞLEMLER — Ürünler ekranından tek tıkla
+   Hepsi mağazaya ANINDA yansır (katalog nesnesi yerinde güncellenir).
+   --------------------------------------------------------------- */
+
+/** İndirim tanımlar veya kaldırır. */
+export async function indirimTanimla(formData: FormData) {
+  if (!dbVar) return;
+  const id = s(formData.get("id"));
+  const yuzde = Math.max(0, Math.min(90, i(formData.get("yuzde"))));
+  const acik = yuzde > 0;
+  if (!id) return;
+
+  const p = await db.product.update({
+    where: { id },
+    data: { campaignOn: acik, campaignPercent: acik ? yuzde : 0 },
+    select: { sku: true },
+  });
+
+  urunuYansit(id, { campaignOn: acik, campaignPercent: acik ? yuzde : 0 });
+  await log("urun.indirim", `${p.sku} · ${acik ? `%${yuzde}` : "kaldırıldı"}`);
+  revalidatePath("/", "layout");
+
+  const geri = geriDon(formData);
+  if (geri) redirect(geri);
+}
+
+/** Ürünü başka bir kategoriye taşır. */
+export async function kategoriyeTasi(formData: FormData) {
+  if (!dbVar) return;
+  const id = s(formData.get("id"));
+  const kategori = s(formData.get("kategori"));
+  const alt = s(formData.get("alt"));
+  if (!id || !kategori) return;
+
+  const p = await db.product.update({
+    where: { id },
+    data: { categoryId: kategori, subId: alt || null },
+    select: { sku: true },
+  });
+
+  urunuYansit(id, { categoryId: kategori, subId: alt || null });
+  await log("urun.kategori", `${p.sku} → ${kategori}${alt ? " / " + alt : ""}`);
+  revalidatePath("/", "layout");
+
+  const geri = geriDon(formData);
+  if (geri) redirect(geri);
+}
+
+/* ---------------------------------------------------------------
+   GÖRSEL YÖNETİMİ
+   --------------------------------------------------------------- */
+
+/** Ürünün görsellerini veritabanından okuyup katalog nesnesine yansıtır. */
+async function gorselleriYansit(productId: string) {
+  const liste = await db.productImage.findMany({
+    where: { productId },
+    orderBy: { sort: "asc" },
+    select: { url: true },
+  });
+  urunuYansit(productId, { images: liste.map((g) => ({ url: g.url })) });
+}
+
+/** Yeni görsel ekler (adres ile). */
+export async function gorselEkle(formData: FormData) {
+  if (!dbVar) return;
+  const id = s(formData.get("id"));
+  const url = s(formData.get("url"), 600);
+  if (!id || !/^https?:\/\//i.test(url)) return;
+
+  const son = await db.productImage.findFirst({
+    where: { productId: id },
+    orderBy: { sort: "desc" },
+    select: { sort: true },
+  });
+  await db.productImage.create({ data: { productId: id, url, sort: (son?.sort ?? -1) + 1 } });
+
+  await gorselleriYansit(id);
+  await log("urun.gorsel-ekle", `${id} · ${url.slice(0, 80)}`);
+  revalidatePath("/", "layout");
+
+  const geri = geriDon(formData);
+  if (geri) redirect(geri);
+}
+
+/** Görseli siler. */
+export async function gorselSil(formData: FormData) {
+  if (!dbVar) return;
+  const gorselId = s(formData.get("gorselId"));
+  if (!gorselId) return;
+
+  const g = await db.productImage.delete({
+    where: { id: gorselId },
+    select: { productId: true, url: true },
+  });
+
+  await gorselleriYansit(g.productId);
+  await log("urun.gorsel-sil", `${g.productId} · ${g.url.slice(0, 80)}`);
+  revalidatePath("/", "layout");
+
+  const geri = geriDon(formData);
+  if (geri) redirect(geri);
+}
+
+/** Görseli ana görsel yapar (listenin başına alır). */
+export async function gorselAnaYap(formData: FormData) {
+  if (!dbVar) return;
+  const gorselId = s(formData.get("gorselId"));
+  if (!gorselId) return;
+
+  const hedef = await db.productImage.findUnique({
+    where: { id: gorselId },
+    select: { productId: true, url: true },
+  });
+  if (!hedef) return;
+
+  const liste = await db.productImage.findMany({
+    where: { productId: hedef.productId },
+    orderBy: { sort: "asc" },
+    select: { id: true },
+  });
+
+  // Hedef başa, kalanlar sırasını koruyarak arkasına
+  const yeni = [gorselId, ...liste.map((g) => g.id).filter((x) => x !== gorselId)];
+  for (let n = 0; n < yeni.length; n++) {
+    await db.productImage.update({ where: { id: yeni[n] }, data: { sort: n } });
+  }
+
+  await gorselleriYansit(hedef.productId);
+  await log("urun.gorsel-ana", `${hedef.productId} · ${hedef.url.slice(0, 80)}`);
+  revalidatePath("/", "layout");
+
+  const geri = geriDon(formData);
+  if (geri) redirect(geri);
+}
+
+/** Görseli bir sıra öne veya arkaya alır. */
+export async function gorselTasi(formData: FormData) {
+  if (!dbVar) return;
+  const gorselId = s(formData.get("gorselId"));
+  const yon = s(formData.get("yon")) === "geri" ? 1 : -1;
+  if (!gorselId) return;
+
+  const hedef = await db.productImage.findUnique({
+    where: { id: gorselId },
+    select: { productId: true },
+  });
+  if (!hedef) return;
+
+  const liste = await db.productImage.findMany({
+    where: { productId: hedef.productId },
+    orderBy: { sort: "asc" },
+    select: { id: true },
+  });
+  const n = liste.findIndex((g) => g.id === gorselId);
+  const m = n + yon;
+  if (n < 0 || m < 0 || m >= liste.length) return;
+
+  const yeni = [...liste];
+  [yeni[n], yeni[m]] = [yeni[m], yeni[n]];
+  for (let k = 0; k < yeni.length; k++) {
+    await db.productImage.update({ where: { id: yeni[k].id }, data: { sort: k } });
+  }
+
+  await gorselleriYansit(hedef.productId);
+  revalidatePath("/", "layout");
+
+  const geri = geriDon(formData);
+  if (geri) redirect(geri);
 }
