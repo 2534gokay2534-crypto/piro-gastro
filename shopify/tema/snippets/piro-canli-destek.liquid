@@ -1,0 +1,31 @@
+{%- comment -%}
+  PIRO GASTRO — CANLI DESTEK
+
+  Tinker temasına eklenir. Sohbet Shopify'da değil, kendi sunucumuzda çalışır;
+  bu yüzden Süper Admin sohbet paneli, okunmamış rozeti ve sesli uyarı aynen
+  korunur. Shopify tarafında yalnızca bu tek satır vardır.
+
+  KURULUM
+  1) Bu dosyayı temanın snippets/ klasörüne koyun.
+  2) layout/theme.liquid içinde </body> etiketinden hemen önce ekleyin:
+       {% render 'piro-canli-destek' %}
+  3) Online Store > Themes > Customize > Theme settings > "Piro sunucu adresi"
+     alanına sunucu adresini yazın (örn. https://piro-gastro.vercel.app).
+     Boş bırakılırsa sohbet hiç yüklenmez — hatalı adresle bozuk pencere
+     göstermektense hiç göstermemek doğrudur.
+  4) Sunucuda SOHBET_KAYNAKLARI değişkenine mağazanın alan adlarını yazın:
+       SOHBET_KAYNAKLARI="https://pirogastro.myshopify.com,https://pirogastro.se"
+     Yazılmazsa tarayıcı isteği CORS nedeniyle engeller.
+{%- endcomment -%}
+
+{%- assign piro_sunucu = settings.piro_sunucu | default: '' | strip -%}
+
+{%- if piro_sunucu != blank -%}
+  {%- comment -%} Yönetim önizlemelerinde pencereyi açma {%- endcomment -%}
+  {%- unless request.design_mode -%}
+    <script
+      src="{{ piro_sunucu | remove_last: '/' }}/sohbet-gomulu.js"
+      data-dil="{{ request.locale.iso_code | default: 'sv' | slice: 0, 2 }}"
+      defer></script>
+  {%- endunless -%}
+{%- endif -%}

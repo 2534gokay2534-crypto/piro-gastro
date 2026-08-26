@@ -1,0 +1,46 @@
+[
+  {
+    "//": "Tinker temasının config/settings_schema.json dosyasındaki diziye EKLENİR — dosyanın yerine konmaz.",
+    "name": "Piro Gastro",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Canlı destek"
+      },
+      {
+        "type": "paragraph",
+        "content": "Sohbet Piro sunucusunda çalışır. Adres boş bırakılırsa pencere hiç yüklenmez."
+      },
+      {
+        "type": "text",
+        "id": "piro_sunucu",
+        "label": "Piro sunucu adresi",
+        "info": "Örnek: https://piro-gastro.vercel.app (sonda eğik çizgi olmadan)",
+        "default": ""
+      },
+      {
+        "type": "header",
+        "content": "Kurumsal satış"
+      },
+      {
+        "type": "checkbox",
+        "id": "piro_fatura_ile_odeme",
+        "label": "Kurumsal fatura ile ödeme başvurusunu göster",
+        "info": "Başvurular Süper Admin panelinde onaylanır.",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "piro_orgnummer",
+        "label": "Organisationsnummer",
+        "default": ""
+      },
+      {
+        "type": "text",
+        "id": "piro_momsnummer",
+        "label": "Momsregistreringsnummer (VAT)",
+        "default": ""
+      }
+    ]
+  }
+]

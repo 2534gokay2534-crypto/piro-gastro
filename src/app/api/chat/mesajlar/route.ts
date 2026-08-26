@@ -1,15 +1,25 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { cevrimIciMi, kirp, sohbetHazirMi } from "@/lib/sohbet";
+import { korsEkle, onKontrol } from "@/lib/sohbet-cors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** Dış vitrinden (Shopify) gelen ön kontrol isteği. */
+export async function OPTIONS(req: Request) {
+  return onKontrol(req);
+}
+
+export async function GET(req: Request) {
+  return korsEkle(await islem(req), req);
+}
 
 /**
  * Yoklama uçtası. Pencere açıkken 4 sn'de bir, kapalıyken 25 sn'de
  * bir çağrılır. "sonra" verilirse yalnızca ondan yeni mesajlar döner.
  */
-export async function GET(req: Request) {
+async function islem(req: Request) {
   if (!(await sohbetHazirMi())) {
     return NextResponse.json({ ok: false, hazir: false }, { status: 200 });
   }

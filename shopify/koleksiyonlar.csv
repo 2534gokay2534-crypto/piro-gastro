@@ -1,0 +1,53 @@
+Handle,Title,Body (HTML),Kural,Sıralama,Üst kategori,Ürün sayısı
+pizza-equipment,Pizzautrustning,"Stenugnar, bandugnar, degutrustning",Etiket eşittir: kategori:pizza-equipment,Manuel (sıra etiketine göre: büyükten küçüğe),,83
+pizza-counters,Pizzabänkar,,Etiket eşittir: alt:pizza-counters,Manuel (sıra etiketine göre: büyükten küçüğe),Pizzautrustning,10
+refrigeration,Kyla,"Kylskåp, frysar, blastchillers",Etiket eşittir: kategori:refrigeration,Manuel (sıra etiketine göre: büyükten küçüğe),,546
+display-counters,Displaydiskar,,Etiket eşittir: alt:display-counters,Manuel (sıra etiketine göre: büyükten küçüğe),Kyla,46
+refrigerators,Kylskåp,,Etiket eşittir: alt:refrigerators,Manuel (sıra etiketine göre: büyükten küçüğe),Kyla,70
+freezers,Frysar,,Etiket eşittir: alt:freezers,Manuel (sıra etiketine göre: büyükten küçüğe),Kyla,51
+refrigerated-counters,Kylda bänkar,,Etiket eşittir: alt:refrigerated-counters,Manuel (sıra etiketine göre: büyükten küçüğe),Kyla,94
+preparation,Förberedelse,"Skärmaskiner, blandare, kvarnar",Etiket eşittir: kategori:preparation,Manuel (sıra etiketine göre: büyükten küçüğe),,128
+cooking,Tillagning,"Spisar, kombiugnar, fritöser",Etiket eşittir: kategori:cooking,Manuel (sıra etiketine göre: büyükten küçüğe),,974
+fryers,Fritöser,,Etiket eşittir: alt:fryers,Manuel (sıra etiketine göre: büyükten küçüğe),Tillagning,119
+ranges-hobs,Spisar & hällar,,Etiket eşittir: alt:ranges-hobs,Manuel (sıra etiketine göre: büyükten küçüğe),Tillagning,233
+boiling-pasta,Kokkärl,,Etiket eşittir: alt:boiling-pasta,Manuel (sıra etiketine göre: büyükten küçüğe),Tillagning,82
+bakery,Bageri,"Ugnar, jässkåp, degutrustning",Etiket eşittir: kategori:bakery,Manuel (sıra etiketine göre: büyükten küçüğe),,5
+dishwashing,Diskning,"Huvdisk, glasdisk, grovdisk",Etiket eşittir: kategori:dishwashing,Manuel (sıra etiketine göre: büyükten küçüğe),,328
+sinks-hand-wash,Diskbänkar,,Etiket eşittir: alt:sinks-hand-wash,Manuel (sıra etiketine göre: büyükten küçüğe),Diskning,99
+dishwasher-bases,Diskunderreden,,Etiket eşittir: alt:dishwasher-bases,Manuel (sıra etiketine göre: büyükten küçüğe),Diskning,1
+ventilation,Ventilation,"Kåpor, filter, frånluftsfläktar",Etiket eşittir: kategori:ventilation,Manuel (sıra etiketine göre: büyükten küçüğe),,437
+extraction-hoods,Kåpor,,Etiket eşittir: alt:extraction-hoods,Manuel (sıra etiketine göre: büyükten küçüğe),Ventilation,166
+filters-purification,Filter & luftrening,,Etiket eşittir: alt:filters-purification,Manuel (sıra etiketine göre: büyükten küçüğe),Ventilation,24
+fans-controllers,Fläktar & styrning,,Etiket eşittir: alt:fans-controllers,Manuel (sıra etiketine göre: büyükten küçüğe),Ventilation,17
+airboxes,Luftboxar,,Etiket eşittir: alt:airboxes,Manuel (sıra etiketine göre: büyükten küçüğe),Ventilation,8
+coffee,Kaffe,"Espressomaskiner, kvarnar, brygg",Etiket eşittir: kategori:coffee,Manuel (sıra etiketine göre: büyükten küçüğe),,142
+spare-parts,Reservdelar,Original reservdelar och tillbehör,Etiket eşittir: kategori:spare-parts,Manuel (sıra etiketine göre: büyükten küçüğe),,52
+gas-valves,Gasventiler,,Etiket eşittir: alt:gas-valves,Manuel (sıra etiketine göre: büyükten küçüğe),Reservdelar,2
+ovens,Ugnar,Kombiugnar och konvektionsugnar,Etiket eşittir: kategori:ovens,Manuel (sıra etiketine göre: büyükten küçüğe),,281
+ovens-stands,Ugnar & underreden,,Etiket eşittir: alt:ovens-stands,Manuel (sıra etiketine göre: büyükten küçüğe),Ugnar,136
+grills,Grillar,"Lavastens-, kontakt- och stekbordsgrillar",Etiket eşittir: kategori:grills,Manuel (sıra etiketine göre: büyükten küçüğe),,318
+grills-grills,Grillar,,Etiket eşittir: alt:grills-grills,Manuel (sıra etiketine göre: büyükten küçüğe),Grillar,87
+griddles,Stekbord,,Etiket eşittir: alt:griddles,Manuel (sıra etiketine göre: büyükten küçüğe),Grillar,72
+dough-flour,Deg & mjöl,Degblandare och degutrullare,Etiket eşittir: kategori:dough-flour,Manuel (sıra etiketine göre: büyükten küçüğe),,132
+dough-mixers,Degblandare,,Etiket eşittir: alt:dough-mixers,Manuel (sıra etiketine göre: büyükten küçüğe),Deg & mjöl,66
+meat-processing,Köttbearbetning,"Köttkvarnar, bensågar och korvmaskiner",Etiket eşittir: kategori:meat-processing,Manuel (sıra etiketine göre: büyükten küçüğe),,19
+stainless-steel-furniture,Rostfria möbler,"Arbetsbänkar, skåp, hyllor och underreden",Etiket eşittir: kategori:stainless-steel-furniture,Manuel (sıra etiketine göre: büyükten küçüğe),,1179
+worktables,Arbetsbänkar,,Etiket eşittir: alt:worktables,Manuel (sıra etiketine göre: büyükten küçüğe),Rostfria möbler,151
+neutral-units,Neutrala enheter,,Etiket eşittir: alt:neutral-units,Manuel (sıra etiketine göre: büyükten küçüğe),Rostfria möbler,29
+drawer-cabinets,Lådskåp,,Etiket eşittir: alt:drawer-cabinets,Manuel (sıra etiketine göre: büyükten küçüğe),Rostfria möbler,11
+shelf-units,Hyllsystem,,Etiket eşittir: alt:shelf-units,Manuel (sıra etiketine göre: büyükten küçüğe),Rostfria möbler,114
+wall-cabinets,Väggskåp,,Etiket eşittir: alt:wall-cabinets,Manuel (sıra etiketine göre: büyükten küçüğe),Rostfria möbler,43
+work-cabinets,Arbetsskåp,,Etiket eşittir: alt:work-cabinets,Manuel (sıra etiketine göre: büyükten küçüğe),Rostfria möbler,133
+wall-shelves,Vägghyllor,,Etiket eşittir: alt:wall-shelves,Manuel (sıra etiketine göre: büyükten küçüğe),Rostfria möbler,66
+overshelves,Överhyllor,,Etiket eşittir: alt:overshelves,Manuel (sıra etiketine göre: büyükten küçüğe),Rostfria möbler,27
+holding-warming,Varmhållning,"Värmeskåp, bain-marie och övervärmare",Etiket eşittir: kategori:holding-warming,Manuel (sıra etiketine göre: büyükten küçüğe),,302
+bain-marie,Bain-marie,,Etiket eşittir: alt:bain-marie,Manuel (sıra etiketine göre: büyükten küçüğe),Varmhållning,20
+chips-scuttles,Pommesvärmare,,Etiket eşittir: alt:chips-scuttles,Manuel (sıra etiketine göre: büyükten küçüğe),Varmhållning,18
+heating-cabinets,Värmeskåp,,Etiket eşittir: alt:heating-cabinets,Manuel (sıra etiketine göre: büyükten küçüğe),Varmhållning,70
+tableware,Dukat bord,"Porslin, bestick och servering",Etiket eşittir: kategori:tableware,Manuel (sıra etiketine göre: büyükten küçüğe),,20
+textiles,Textilier,"Arbetskläder, förkläden och dukar",Etiket eşittir: kategori:textiles,Manuel (sıra etiketine göre: büyükten küçüğe),,0
+kitchen-utensils,Köksredskap,"GN-kantiner, knivar, vagnar",Etiket eşittir: kategori:kitchen-utensils,Manuel (sıra etiketine göre: büyükten küçüğe),,365
+waste-bins,Avfallskärl,,Etiket eşittir: alt:waste-bins,Manuel (sıra etiketine göre: büyükten küçüğe),Köksredskap,5
+chopping-blocks,Skärblock,,Etiket eşittir: alt:chopping-blocks,Manuel (sıra etiketine göre: büyükten küçüğe),Köksredskap,38
+accessories,Tillbehör,,Etiket eşittir: alt:accessories,Manuel (sıra etiketine göre: büyükten küçüğe),Köksredskap,22
+chairs-tables,Bord & stolar,Restaurangmöbler för gästutrymmen,Etiket eşittir: kategori:chairs-tables,Manuel (sıra etiketine göre: büyükten küçüğe),,9

@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { SINIR, cevrimIciMi, epostaGecerli, kirp, sohbetHazirMi } from "@/lib/sohbet";
+import { korsEkle, onKontrol } from "@/lib/sohbet-cors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Yeni sohbet oturumu açar ve ilk mesajı kaydeder. */
+/** Dış vitrinden (Shopify) gelen ön kontrol isteği. */
+export async function OPTIONS(req: Request) {
+  return onKontrol(req);
+}
+
 export async function POST(req: Request) {
+  return korsEkle(await islem(req), req);
+}
+
+/** Yeni sohbet oturumu açar ve ilk mesajı kaydeder. */
+async function islem(req: Request) {
   if (!(await sohbetHazirMi())) {
     return NextResponse.json({ ok: false, hazir: false }, { status: 200 });
   }

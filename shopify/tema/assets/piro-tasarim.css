@@ -1,0 +1,205 @@
+/* =====================================================================
+   PIRO GASTRO — MARKA GÖRÜNÜMÜ (Shopify tema katmanı)
+
+   Tinker temasının üzerine eklenir; temanın kendi dosyaları DEĞİŞTİRİLMEZ.
+   Böylece tema güncellemesi geldiğinde bu katman ayakta kalır.
+
+   Renkler ve gölgeler mevcut siteyle birebir aynıdır (src/app/globals.css).
+
+   KURULUM
+     1) Bu dosyayı temanın assets/ klasörüne koyun.
+     2) layout/theme.liquid içinde </head> öncesine ekleyin:
+          {{ 'piro-tasarim.css' | asset_url | stylesheet_tag }}
+        Tema kendi stillerinden SONRA yüklenmelidir; sıra önemlidir.
+   ===================================================================== */
+
+:root {
+  /* Lacivert — ana marka rengi */
+  --piro-navy-950: #050d18;
+  --piro-navy-900: #0a1b2e;
+  --piro-navy-800: #0e2438;
+  --piro-navy-700: #173350;
+  --piro-navy-600: #22496e;
+  --piro-navy-500: #2f6396;
+
+  /* Çelik grisi — metin ve çerçeveler */
+  --piro-steel-900: #39424d;
+  --piro-steel-700: #5a6674;
+  --piro-steel-500: #8794a3;
+  --piro-steel-400: #a9b4c0;
+  --piro-steel-300: #c7d0da;
+  --piro-steel-200: #dfe5ec;
+  --piro-steel-100: #eef2f6;
+  --piro-steel-50: #f7f9fb;
+
+  /* Altın — vurgu */
+  --piro-gold-800: #8a6c28;
+  --piro-gold-700: #a8842f;
+  --piro-gold: #c8a24a;
+  --piro-gold-400: #dcbe79;
+  --piro-gold-200: #efe0bc;
+
+  /* Durum renkleri */
+  --piro-ok: #1a7f5a;
+  --piro-warn: #b8860b;
+  --piro-danger: #bb3b2b;
+
+  /* Gölgeler */
+  --piro-golge-1: 0 1px 2px rgba(10, 27, 46, 0.06);
+  --piro-golge-2: 0 2px 8px rgba(10, 27, 46, 0.08);
+  --piro-golge-3: 0 6px 22px rgba(10, 27, 46, 0.1);
+  --piro-golge-4: 0 14px 44px rgba(10, 27, 46, 0.16);
+
+  /* Tipografi — mevcut sitedeki sistem yazı yığını */
+  --piro-yazi: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* --- Gövde ---------------------------------------------------------- */
+body {
+  font-family: var(--piro-yazi);
+  color: var(--piro-steel-900);
+  background: #fff;
+}
+
+/* --- Başlıklar ------------------------------------------------------ */
+h1, h2, h3, h4 {
+  color: var(--piro-navy-900);
+  letter-spacing: -0.01em;
+}
+
+/* --- Birincil düğmeler ---------------------------------------------
+   Tinker'ın kendi sınıf adlarını bilmediğimiz için hem genel HTML
+   öğelerini hem de Shopify temalarında yaygın olan sınıfları hedefliyoruz.
+   Tema farklı bir sınıf kullanıyorsa buraya eklenmesi yeterlidir.        */
+.button,
+.btn,
+.shopify-payment-button__button--unbranded,
+button[name="add"],
+input[type="submit"] {
+  background: var(--piro-navy-900);
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.button:hover,
+.btn:hover,
+.shopify-payment-button__button--unbranded:hover,
+button[name="add"]:hover {
+  background: var(--piro-navy-800);
+}
+
+.button:focus-visible,
+.btn:focus-visible,
+button[name="add"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(200, 162, 74, 0.5);
+}
+
+/* İkincil düğme — çerçeveli */
+.button--secondary,
+.btn--secondary {
+  background: transparent;
+  color: var(--piro-navy-900);
+  border: 1px solid var(--piro-steel-300);
+}
+
+/* --- Bağlantılar ---------------------------------------------------- */
+a {
+  color: var(--piro-navy-600);
+}
+a:hover {
+  color: var(--piro-navy-900);
+}
+
+/* --- Ürün kartları -------------------------------------------------- */
+.card,
+.product-card,
+.card-wrapper {
+  border-radius: 14px;
+  box-shadow: var(--piro-golge-1);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+.card:hover,
+.product-card:hover,
+.card-wrapper:hover {
+  box-shadow: var(--piro-golge-3);
+}
+
+/* --- Fiyat ---------------------------------------------------------- */
+.price,
+.price-item {
+  color: var(--piro-navy-900);
+  font-weight: 700;
+}
+.price--on-sale .price-item--regular {
+  color: var(--piro-steel-500);
+}
+
+/* --- Rozet ---------------------------------------------------------- */
+.badge {
+  background: var(--piro-gold);
+  color: var(--piro-navy-950);
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+/* --- Form alanları -------------------------------------------------- */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="search"],
+select,
+textarea {
+  border: 1px solid var(--piro-steel-300);
+  border-radius: 10px;
+  color: var(--piro-steel-900);
+  /* 16px: iOS Safari daha küçük yazıda odaklanınca sayfayı yakınlaştırır */
+  font-size: 16px;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--piro-navy-500);
+  box-shadow: 0 0 0 3px rgba(47, 99, 150, 0.15);
+}
+
+/* --- Üst bar / alt bilgi -------------------------------------------- */
+.header,
+.site-header {
+  border-bottom: 1px solid var(--piro-steel-200);
+}
+.footer,
+.site-footer {
+  background: var(--piro-navy-900);
+  color: var(--piro-steel-200);
+}
+.footer a,
+.site-footer a {
+  color: var(--piro-steel-200);
+}
+.footer a:hover,
+.site-footer a:hover {
+  color: var(--piro-gold-400);
+}
+
+/* --- Duyarlılık -----------------------------------------------------
+   Tema kendi kırılma noktalarını yönetir; burada yalnızca B2B kataloğu
+   için önemli olan iki şeyi güvenceye alıyoruz: taşan tablolar ve
+   dokunmatikte yeterli düğme yüksekliği.                                */
+table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+@media (max-width: 749px) {
+  .button,
+  .btn,
+  button[name="add"] {
+    min-height: 44px; /* dokunma hedefi */
+  }
+}
