@@ -178,12 +178,19 @@ function urunSatirlari(p, dil) {
   const marka = markaById.get(p.brandId)?.name ?? "Piro Gastro";
   const tur = katAdi(p.subId ?? p.categoryId, dil);
 
+  // FİYATSIZ ÜRÜN — dikkat.
+  // Mağazamızda fiyatı olmayan ürün "fiyat sorunuz" olarak gösterilir.
+  // Shopify'da ise 0,00 fiyat "bedavaya satın alınabilir" demektir. Bu yüzden
+  // fiyatsız ürünler taslak olarak aktarılır; fiyat girilince yayına alınır.
+  const fiyatiYok = !p.priceCents;
+  const yayinda = !p.hidden && !fiyatiYok;
+
   const satirlar = [];
 
   // İlk satır: ürünün tamamı + ilk görsel
   satirlar.push([
     h, baslik, govdeHtml(p, dil), marka, SHOPIFY_KATEGORI, tur, etiketler(p, dil),
-    p.hidden ? "FALSE" : "TRUE",
+    yayinda ? "TRUE" : "FALSE",
     "Title", "Default Title",
     p.sku, gram, "shopify",
     p.onRequest ? 0 : Math.max(0, p.stock ?? 0),
@@ -194,7 +201,7 @@ function urunSatirlari(p, dil) {
     "FALSE",
     baslik.slice(0, 70),
     (metin(p, "desc", dil) || baslik).slice(0, 320),
-    p.hidden ? "draft" : "active",
+    yayinda ? "active" : "draft",
     p.dims?.w ?? "", p.dims?.d ?? "", p.dims?.h ?? "",
     p.warranty ?? "", p.leadDays ?? "",
   ]);

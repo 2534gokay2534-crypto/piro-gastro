@@ -184,9 +184,15 @@ for (let i = 1; i < anaSatirlar.length; i++) {
 k(sirasizSatir === 0, "CSV satır sırası: büyük ürünler önce", sirasizSatir ? String(sirasizSatir) : "");
 
 // Gizli ürünler mağazada yayında olmamalı
-const gizli = katalog.products.filter((p) => p.hidden).map((p) => handle(p.slug));
-const yanlisYayin = anaSatirlar.filter((r) => gizli.includes(r.Handle) && r.Published === "TRUE");
-k(yanlisYayin.length === 0, "gizli ürünler yayında değil", `${gizli.length} gizli ürün`);
+const gizli = new Set(katalog.products.filter((p) => p.hidden).map((p) => handle(p.slug)));
+const yanlisYayin = anaSatirlar.filter((r) => gizli.has(r.Handle) && r.Published === "TRUE");
+k(yanlisYayin.length === 0, "gizli ürünler yayında değil", `${gizli.size} gizli ürün`);
+
+// Fiyatsız ürün Shopify'da 0,00 kr olur — bedavaya satılmasın diye taslak kalmalı
+const fiyatsiz = new Set(katalog.products.filter((p) => !p.priceCents).map((p) => handle(p.slug)));
+const bedava = anaSatirlar.filter((r) => fiyatsiz.has(r.Handle) && (r.Status !== "draft" || r.Published !== "FALSE"));
+k(bedava.length === 0, "fiyatsız ürünler taslak (bedava satılamaz)",
+  `${fiyatsiz.size} fiyatsız ürün` + (bedava.length ? ` — ${bedava.length} tanesi YAYINDA` : ""));
 
 console.log("\n=== E. KOLEKSİYONLAR ===");
 const kol = csvCoz(fs.readFileSync(path.join(DIZIN, "koleksiyonlar.csv"), "utf8"));

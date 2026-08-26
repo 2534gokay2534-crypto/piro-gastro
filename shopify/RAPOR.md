@@ -79,6 +79,7 @@ durumda ana dile döner, gereksiz satır sorun çıkarır.
 | `categoryId` / `subId` | `kategori:…` / `alt:…` etiketi → koleksiyon kuralı |
 | `sortRank` | `sira:0000` etiketi + CSV satır sırası |
 | `hidden` | Published = FALSE, Status = draft |
+| fiyatı olmayan ürün (5 adet) | **taslak** — Shopify'da 0,00 kr bedava satış demek |
 | `images[]` | Image Src + Image Position (sıra korundu) |
 
 ### Kategori yapısı ve sıralama korundu
@@ -106,6 +107,7 @@ CSV satır sırası: büyük ürünler önce    OK
 her kategori için koleksiyon var        OK  52 / 52
 fiyatlar SEK'e çevrilmiş (EUR × 11.4)   OK
 kampanya ve üstü çizili liste fiyatı    OK
+fiyatsız ürünler taslak                 OK  5 ürün
 dosya boyutu / satır sınırı             OK  en büyüğü 1.5 MB
 ```
 
@@ -118,6 +120,12 @@ katalogda şu an indirimli ürün olmadığı için yapay kampanyayla (0 hata):
 100054  103,00 €  -%50  ->  Price  587,10 kr   CompareAt 1174,20 kr
 kampanyasız üründe CompareAt boş
 ```
+
+Not: fiyatı girilmemiş 5 Unninox ürünü (Pasta Cooker E70BP10B/E70BP20B,
+Chips Scuttle E70PD20-K, Contact Grill TME-2E/TME-3) **taslak** olarak
+aktarılıyor. Bizim sitemizde bunlar "fiyat sorunuz" diye görünüyor, ama
+Shopify'da 0,00 kr fiyat bedavaya satın alınabilir demek olurdu. Fiyat
+girildiğinde yayına alınabilirler.
 
 Not: `textiles` (Textilier) koleksiyonu boş — katalogda da bu kategoride ürün
 yok. Kategori yapısını koruyalım diye yine de üretildi.
