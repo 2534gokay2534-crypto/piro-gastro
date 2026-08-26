@@ -3,28 +3,38 @@ import { PrismaClient } from "@/generated/prisma/client";
 /**
  * Prisma istemcisi — TEMBEL YÜKLEME.
  *
- * better-sqlite3 yerel (native) bir ikilidir ve sunucusuz ortamda
- * yüklenemez. Modül tepesinde import edilirse sayfa daha açılmadan
- * çöker. Bu yüzden adaptör ancak gerçekten gerekince yüklenir.
+ * Adaptör modül tepesinde import edilmez; ancak gerçekten gerekince
+ * yüklenir. Böylece veritabanı olmayan bir ortamda sayfa çökmez.
  *
- * DATABASE_URL yoksa veritabanı YOK sayılır; mağaza sayfaları zaten
+ * VERİTABANI: PostgreSQL (Neon). Prisma şema başına tek sağlayıcı
+ * destekler; şema PostgreSQL'e göre üretildiği için DATABASE_URL de
+ * PostgreSQL olmalıdır. "file:" ile başlayan SQLite adresi verilirse
+ * istemci hiç kurulmaz — Prisma'nın anlaşılması güç "adapter is not
+ * compatible" hatası yerine ne yapılacağını söyleyen bir mesaj verilir.
+ * (Bu uyumsuzluk, canlıda "Veritabanı bağlı değil" uyarısının sebebiydi.)
+ *
+ * DATABASE_URL yoksa veritabanı YOK sayılır; mağaza sayfaları
  * yayınlanmış katalog dosyasından okuduğu için etkilenmez.
  */
 
 const url = process.env.DATABASE_URL ?? "";
-const sqliteMi = url.startsWith("file:");
+const postgresMi = /^(postgres|postgresql|prisma\+postgres):/.test(url);
+
+/** Adres var ama PostgreSQL değil — kurulum ekranı bunu ayrıca uyarır. */
+export const yanlisSaglayici: boolean = !!url && !postgresMi;
 
 /** Veritabanı kullanılabilir mi? Yönetici sayfaları buna bakar. */
-export const dbVar: boolean = !!url;
+export const dbVar: boolean = postgresMi;
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function olustur(): PrismaClient {
-  if (!url) throw new Error("DATABASE_URL tanımlı değil");
-  if (sqliteMi) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
-    return new PrismaClient({ adapter: new PrismaBetterSqlite3({ url }) });
+  if (!url) throw new Error("DATABASE_URL tanımlı değil.");
+  if (!postgresMi) {
+    throw new Error(
+      "DATABASE_URL bir PostgreSQL adresi değil. Şema PostgreSQL için üretiliyor; " +
+        'adres "postgresql://…" ile başlamalı (Neon bağlantı dizesi).',
+    );
   }
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { PrismaPg } = require("@prisma/adapter-pg");

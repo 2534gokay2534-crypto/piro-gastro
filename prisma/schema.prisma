@@ -1,7 +1,9 @@
 // Piro Gastro Center AB — çok dilli katalog veritabanı
 //
-// Geliştirme: SQLite (kurulum gerektirmez, dev.db dosyası)
-// Yayın     : PostgreSQL — provider'ı "postgresql" yapıp DATABASE_URL vermek yeterli
+// Veritabani: PostgreSQL (Neon). Hem yayin hem gelistirme ayni saglayiciyi
+// kullanir — Prisma sema basina tek saglayici destekler ve iki lehcede ayri
+// migration tutmak kacinilmaz olarak birbirinden ayrisir.
+// Gelistirme icin Neon'da ayri bir veritabani (ya da branch) kullanin.
 //
 // Çeviri tasarımı: her metin alanı AYRI SATIRDA, dil koduyla tutulur.
 // Yeni dil eklemek ŞEMA DEĞİŞİKLİĞİ GEREKTİRMEZ — Language tablosuna bir
@@ -13,7 +15,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ---------------------------------------------------------------
