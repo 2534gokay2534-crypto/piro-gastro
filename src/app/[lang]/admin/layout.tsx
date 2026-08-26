@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import AdminKenar from "@/components/admin/AdminKenar";
+import SohbetBildirim from "@/components/admin/SohbetBildirim";
 import { db, dbVar } from "@/lib/db";
 import { isLang } from "@/lib/i18n";
 
@@ -18,7 +19,13 @@ async function sayaclariGetir() {
   try {
     const [siparis, sohbet, stok, fatura] = await Promise.all([
       db.order.count({ where: { status: "new" } }),
-      db.chatSession.count({ where: { status: "open" } }),
+      // Rozet: okunmamış müşteri mesajı olan sohbet sayısı
+      db.chatSession.count({
+        where: {
+          status: { in: ["open", "waiting"] },
+          messages: { some: { sender: "visitor" } },
+        },
+      }),
       db.product.count({ where: { hidden: false, onRequest: false, stock: { lte: 0 } } }),
       db.invoiceApplication.count({ where: { status: "pending" } }),
     ]);
@@ -44,6 +51,10 @@ export default async function AdminLayout({
     <div className="flex min-h-screen bg-steel-50">
       <AdminKenar lang={lang} sayac={sayac} />
       <div className="min-w-0 flex-1">{children}</div>
+
+      {/* Canlı sohbet bildirimi — her yönetici sayfasında çalışır,
+          yeni müşteri mesajında sesli uyarı verir ve okunana kadar durur. */}
+      <SohbetBildirim lang={lang} />
     </div>
   );
 }

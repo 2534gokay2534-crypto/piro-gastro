@@ -279,7 +279,8 @@ model ChatSession {
   phone       String?
   lang        String    @default("sv")
   page        String?
-  status      String    @default("open") // open | closed
+  /// open = açık · waiting = beklemede (yanıt bekliyor) · closed = kapatıldı
+  status      String    @default("open")
   mode        String    @default("live") // live | offline
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now())

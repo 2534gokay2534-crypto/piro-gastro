@@ -31,7 +31,7 @@ export default async function SohbetListe({
   const { f } = await searchParams;
   if (!isLang(lang)) notFound();
   const l = lang as Lang;
-  const suzgec = f === "closed" || f === "hepsi" ? f : "open";
+  const suzgec = f === "closed" || f === "waiting" || f === "hepsi" ? f : "open";
 
   if (!dbVar) return <VeritabaniGerekli lang={l} sayfa="Sohbetler" />;
 
@@ -177,7 +177,8 @@ export default async function SohbetListe({
 
       <div className="mt-6 flex gap-2">
         {sekme("open", "Açık")}
-        {sekme("closed", "Kapalı")}
+        {sekme("waiting", "Beklemede")}
+        {sekme("closed", "Kapatıldı")}
         {sekme("hepsi", "Tümü")}
       </div>
 
@@ -204,7 +205,7 @@ export default async function SohbetListe({
                 <span
                   className={
                     "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full " +
-                    (bekliyor ? "bg-danger" : o.status === "open" ? "bg-emerald-500" : "bg-steel-300")
+                    (bekliyor ? "bg-danger" : o.status === "open" ? "bg-emerald-500" : o.status === "waiting" ? "bg-warn" : "bg-steel-300")
                   }
                   aria-hidden="true"
                 />
@@ -218,6 +219,11 @@ export default async function SohbetListe({
                     {o.mode === "offline" && (
                       <span className="rounded bg-gold-200 px-1.5 py-0.5 text-[10.6px] font-bold text-gold-800">
                         mesaj bırakıldı
+                      </span>
+                    )}
+                    {o.status === "waiting" && (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10.6px] font-bold text-warn">
+                        beklemede
                       </span>
                     )}
                     {o.status === "closed" && (
