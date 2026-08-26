@@ -115,6 +115,10 @@ model Product {
 
   sold Int @default(0)
 
+  /// Listeleme sırası: büyük/ana ürün 1000'e, tamamlayıcı küçük 0'a yakın.
+  /// scripts/urun-sirala.mjs hesaplar; mağaza ve yönetici paneli aynı sayıyı okur.
+  sortRank Int @default(500)
+
   /// Alış maliyeti — kâr/zarar hesabı için (kuruş)
   costCents  Int     @default(0)
   supplierId String?

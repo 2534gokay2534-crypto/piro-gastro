@@ -101,7 +101,7 @@ export default async function UrunlerPage({
   const alt = sp.a ?? "";
   const durum = sp.d ?? "";
   const sayfaNo = Math.max(1, Number(sp.s) || 1);
-  const sir = sp.sir ?? "yeni";
+  const sir = sp.sir ?? "buyuk";
 
   /* ============ 1) KATEGORİ KARTLARI ============ */
   if (!kat && !q && !durum) {
@@ -232,12 +232,20 @@ export default async function UrunlerPage({
     }];
   }
 
+  // Varsayılan: mağazadakiyle birebir aynı sıra — büyük/ana ürünler önce.
   const siralama =
-    sir === "fiyatArtan" ? { priceCents: "asc" as const }
-      : sir === "fiyatAzalan" ? { priceCents: "desc" as const }
-        : sir === "stokAz" ? { stock: "asc" as const }
-          : sir === "cokSatan" ? { sold: "desc" as const }
-            : { createdAt: "desc" as const };
+    sir === "fiyatArtan" ? [{ priceCents: "asc" as const }]
+      : sir === "fiyatAzalan" ? [{ priceCents: "desc" as const }]
+        : sir === "stokAz" ? [{ stock: "asc" as const }]
+          : sir === "cokSatan" ? [{ sold: "desc" as const }]
+            : sir === "yeni" ? [{ createdAt: "desc" as const }]
+              : [
+                  { featured: "desc" as const },
+                  { sortRank: "desc" as const },
+                  { priceCents: "desc" as const },
+                  { sold: "desc" as const },
+                  { sku: "asc" as const },
+                ];
 
   let toplam = 0;
   let urunler: Array<{
@@ -290,7 +298,7 @@ export default async function UrunlerPage({
     if (alt) p.set("a", alt);
     if (durum) p.set("d", durum);
     if (s > 1) p.set("s", String(s));
-    if (sir !== "yeni") p.set("sir", sir);
+    if (sir !== "buyuk") p.set("sir", sir);
     return p.toString() ? `${kok}?${p.toString()}` : kok;
   };
   const geriAdres = sorgu(sayfaNo);
@@ -358,6 +366,7 @@ export default async function UrunlerPage({
           ad="sir"
           deger={sir}
           secenekler={[
+            { v: "buyuk", a: "Büyükten küçüğe (mağaza sırası)" },
             { v: "yeni", a: "En yeni" },
             { v: "fiyatArtan", a: "Fiyat ↑" },
             { v: "fiyatAzalan", a: "Fiyat ↓" },

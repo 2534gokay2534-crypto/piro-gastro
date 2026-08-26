@@ -38,6 +38,8 @@ export type Product = {
   warranty: number;
   hidden: boolean;
   featured: boolean;
+  /** Listeleme sırası: büyük/ana ürün 1000'e, tamamlayıcı küçük 0'a yakın. */
+  sortRank?: number;
   badge: string | null;
   campaignOn: boolean;
   campaignPercent: number;
@@ -160,9 +162,24 @@ export function searchProducts(q: string): Product[] {
 }
 
 /** Öne çıkanlar önce, sonra çok satan. */
+/**
+ * Listeleme sırası: önce öne çıkarılanlar, sonra BÜYÜK/ANA ürünler,
+ * en sonda tamamlayıcı küçük ürünler.
+ *
+ * `sortRank` scripts/urun-sirala.mjs tarafından hacim, ağırlık ve fiyattan
+ * hesaplanır. Yönetici paneli de aynı alanı okur; sıra iki yerde birebir aynıdır.
+ */
 export function sortForListing(list: Product[]): Product[] {
   return [...list].sort(
-    (a, b) => Number(b.featured) - Number(a.featured) || b.sold - a.sold,
+    (a, b) =>
+      Number(b.featured) - Number(a.featured) ||
+      (b.sortRank ?? 500) - (a.sortRank ?? 500) ||
+      b.priceCents - a.priceCents ||
+      b.sold - a.sold ||
+      // Son eşitlik bozucu: stok kodu. Kod noktası sırası kullanılır ki
+      // veritabanının BINARY sıralamasıyla birebir aynı sonucu versin —
+      // aksi halde eşit puanlı ürünler iki tarafta farklı sırada çıkardı.
+      (a.sku < b.sku ? -1 : a.sku > b.sku ? 1 : 0),
   );
 }
 
