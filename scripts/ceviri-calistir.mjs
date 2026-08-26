@@ -13,9 +13,7 @@
  */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PrismaClient } from "../src/generated/prisma/client.js";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { db } from "./_db.mjs";
 import crypto from "node:crypto";
 import "dotenv/config";
 
@@ -33,11 +31,6 @@ const LIMIT = li > -1 ? Number(process.argv[li + 1]) : 0;
 const si = process.argv.indexOf("--sadece");
 const SADECE = si > -1 ? process.argv[si + 1] : null;
 
-const url = process.env.DATABASE_URL ?? "file:./dev.db";
-const adapter = url.startsWith("file:")
-  ? new PrismaBetterSqlite3({ url })
-  : new PrismaPg({ connectionString: url });
-const db = new PrismaClient({ adapter });
 
 const ozet = (s) => crypto.createHash("sha256").update(s).digest("hex");
 const SAYISAL = /^[\d\s.,:;+°/x×"'()-]+$/;

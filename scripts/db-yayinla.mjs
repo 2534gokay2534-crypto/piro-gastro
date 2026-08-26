@@ -14,19 +14,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PrismaClient } from "../src/generated/prisma/client.js";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { db } from "./_db.mjs";
 import "dotenv/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HEDEF = path.resolve(__dirname, "../src/data/catalog.json");
 
-const url = process.env.DATABASE_URL ?? "file:./dev.db";
-const adapter = url.startsWith("file:")
-  ? new PrismaBetterSqlite3({ url })
-  : new PrismaPg({ connectionString: url });
-const db = new PrismaClient({ adapter });
 
 async function main() {
   console.time("yayın");

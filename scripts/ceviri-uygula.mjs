@@ -72,10 +72,7 @@ console.log(`${DIL} açıklaması olan toplam : ${toplam} / ${katalog.products.l
 
 /* ---- veritabanına da yaz ---- */
 if (YAZ && DB) {
-  const { PrismaClient } = await import("../src/generated/prisma/client.js");
-  const { PrismaBetterSqlite3 } = await import("@prisma/adapter-better-sqlite3");
-  const url = process.env.DATABASE_URL ?? "file:./dev.db";
-  const db = new PrismaClient({ adapter: new PrismaBetterSqlite3({ url }) });
+  const { db } = await import("./_db.mjs");
 
   let dbYazilan = 0;
   for (const p of katalog.products) {

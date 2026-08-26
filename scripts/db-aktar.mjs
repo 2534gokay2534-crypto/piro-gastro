@@ -9,15 +9,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { PrismaClient } from "../src/generated/prisma/client.js";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { db as prisma } from "./_db.mjs";
 import "dotenv/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const KAYNAK = path.resolve(__dirname, "../src/data/catalog.json");
 
-const url = process.env.DATABASE_URL ?? "file:./dev.db";
-const prisma = new PrismaClient({ adapter: new PrismaBetterSqlite3({ url }) });
 
 const katalog = JSON.parse(fs.readFileSync(KAYNAK, "utf8"));
 const es = (a, b) => a && b && String(a).trim() === String(b).trim();
