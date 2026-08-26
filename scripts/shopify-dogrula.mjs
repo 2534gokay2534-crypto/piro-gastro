@@ -109,6 +109,31 @@ const kotuFiyat = anaSatirlar.filter((r) => !/^\d+\.\d{2}$/.test(r["Variant Pric
 k(kotuFiyat.length === 0, "fiyat biçimi geçerli (0.00)",
   kotuFiyat.slice(0, 2).map((r) => r.Handle + "=" + r["Variant Price"]).join(", "));
 
+// PARA BİRİMİ — kataloğun priceCents değeri EUR cinsindendir (src/lib/money.ts).
+// Mağaza SEK ile satıyorsa çevrilmiş olmalı; çevrilmezse ürünler 11 kat ucuz görünür.
+const dilTanimi = katalog.languages.find((l) => l.code === "sv");
+const kur = dilTanimi.rate;
+let fiyatHatasi = 0, indirimHatasi = 0, indirimli = 0;
+for (const r of anaSatirlar) {
+  const p = new Map(katalog.products.map((x) => [handle(x.slug), x])).get(r.Handle);
+  if (!p) continue;
+  const net = p.campaignOn && p.campaignPercent
+    ? Math.round(p.priceCents * (1 - p.campaignPercent / 100))
+    : p.priceCents;
+  const beklenen = (Math.round(net * kur) / 100).toFixed(2);
+  if (r["Variant Price"] !== beklenen) fiyatHatasi++;
+  if (net < p.priceCents) {
+    indirimli++;
+    if (r["Variant Compare At Price"] !== (Math.round(p.priceCents * kur) / 100).toFixed(2)) indirimHatasi++;
+  } else if (r["Variant Compare At Price"]) {
+    indirimHatasi++; // indirim yokken üstü çizili fiyat yazılmamalı
+  }
+}
+k(fiyatHatasi === 0, `fiyatlar ${dilTanimi.currency}'e çevrilmiş (EUR × ${kur})`,
+  fiyatHatasi ? `${fiyatHatasi} ürün yanlış` : "");
+k(indirimHatasi === 0, "kampanya fiyatı ve üstü çizili liste fiyatı doğru",
+  `${indirimli} indirimli ürün`);
+
 k(anaSatirlar.every((r) => r.Title.trim()), "her üründe başlık var");
 k(anaSatirlar.every((r) => r["Variant SKU"].trim()), "her üründe SKU var");
 const skuKume = new Set(anaSatirlar.map((r) => r["Variant SKU"]));

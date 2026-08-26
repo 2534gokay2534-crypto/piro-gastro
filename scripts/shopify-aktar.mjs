@@ -22,8 +22,9 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const KOK = path.resolve(__dirname, "..");
-const KATALOG = path.join(KOK, "src", "data", "catalog.json");
-const CIKTI = path.join(KOK, "shopify");
+const bayrak = (ad) => process.argv.find((a) => a.startsWith(`--${ad}=`))?.split("=").slice(1).join("=");
+const KATALOG = bayrak("katalog") ?? path.join(KOK, "src", "data", "catalog.json");
+const CIKTI = bayrak("cikti") ?? path.join(KOK, "shopify");
 
 const YAZ = process.argv.includes("--yaz");
 const ANA_DIL = (process.argv.find((a) => a.startsWith("--dil="))?.split("=")[1] ?? "sv");
@@ -37,6 +38,28 @@ const { products: URUNLER, categories: KATEGORILER, brands: MARKALAR } = katalog
 
 const kategoriById = new Map(KATEGORILER.map((c) => [c.id, c]));
 const markaById = new Map(MARKALAR.map((b) => [b.id, b]));
+
+/**
+ * PARA BİRİMİ — dikkat.
+ * catalog.json'daki priceCents EUR cinsindendir (src/lib/money.ts).
+ * Mağaza İsveççe ise fiyat SEK'e çevrilmelidir; ham sayıyı yazmak
+ * ürünleri 11 kat ucuz gösterirdi.
+ */
+const DIL_TANIMI = katalog.languages.find((l) => l.code === ANA_DIL);
+if (!DIL_TANIMI) throw new Error(`catalog.json içinde "${ANA_DIL}" dili yok`);
+const PARA = DIL_TANIMI.currency;
+const KUR = DIL_TANIMI.rate;
+
+/** EUR cent -> mağaza para biriminde "0.00" metni. */
+function fiyat(centEur) {
+  return (Math.round(centEur * KUR) / 100).toFixed(2);
+}
+
+/** Kampanya varsa indirimli fiyat (src/lib/money.ts netCents ile aynı kural). */
+function netCent(p) {
+  if (!p.campaignOn || !p.campaignPercent) return p.priceCents;
+  return Math.round(p.priceCents * (1 - p.campaignPercent / 100));
+}
 
 /* ------------------------------------------------------------------ */
 /* Yardımcılar                                                         */
@@ -147,7 +170,10 @@ function urunSatirlari(p, dil) {
   const h = handle(p.slug);
   const baslik = metin(p, "name", dil) || p.sku;
   const gorseller = (p.images ?? []).map((g) => g.url).filter(Boolean);
-  const fiyat = (p.priceCents / 100).toFixed(2);
+  const net = netCent(p);
+  // Shopify'da Price satış fiyatı, Compare At üstü çizili liste fiyatıdır.
+  const satis = fiyat(net);
+  const liste = net < p.priceCents ? fiyat(p.priceCents) : "";
   const gram = p.weightKg ? Math.round(p.weightKg * 1000) : 0;
   const marka = markaById.get(p.brandId)?.name ?? "Piro Gastro";
   const tur = katAdi(p.subId ?? p.categoryId, dil);
@@ -162,7 +188,7 @@ function urunSatirlari(p, dil) {
     p.sku, gram, "shopify",
     p.onRequest ? 0 : Math.max(0, p.stock ?? 0),
     p.onRequest ? "continue" : "deny",       // sipariş üzerine → stok bitse de satılabilir
-    "manual", fiyat, "",
+    "manual", satis, liste,
     "TRUE", "TRUE",
     gorseller[0] ?? "", gorseller[0] ? 1 : "", gorseller[0] ? baslik : "",
     "FALSE",
@@ -280,6 +306,7 @@ console.log("  alt kategori        :", KATEGORILER.filter((c) => c.parentId).len
 console.log("  marka               :", MARKALAR.length);
 console.log("\nÜRETİLEN");
 console.log("  ana dil             :", ANA_DIL);
+console.log("  para birimi         :", PARA, KUR === 1 ? "(EUR ile aynı)" : `(EUR × ${KUR})`);
 console.log("  CSV satırı          :", toplamSatir, "(ürün + ek görsel satırları)");
 console.log("  dosya               :", parcalar.length, "parça ×", PARCA_URUN, "ürün");
 for (const p of parcalar) {

@@ -72,7 +72,7 @@ const SAYFA = `<!doctype html>
       <div class="gorsel">produktbild</div>
       <div>
         <h1>Soppkastrull Gourmet 10L</h1>
-        <span class="price">1 550,00 kr</span>
+        <span class="price">1 767,00 kr</span>
         <button class="button" name="add" type="button">Lägg i varukorg</button>
         <table>
           <tr><td>Artikelnummer</td><td>100047</td></tr>

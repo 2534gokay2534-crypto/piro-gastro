@@ -52,8 +52,13 @@ Bölüm 6'da ne kaldığı tek tek yazılı.
 | `ceviriler-tr.csv` | 2623 çeviri |
 | `ceviriler-de.csv` | 2144 çeviri |
 
-**Ana dil İsveççe.** Ürün adı diğer dilde İsveççeyle aynıysa çeviri satırı
-yazılmaz — Shopify o durumda ana dile döner, gereksiz satır sorun çıkarır.
+**Ana dil İsveççe, para birimi SEK.** Katalogda fiyatlar EUR cent olarak
+tutuluyor (`src/lib/money.ts`), mağaza ise SEK ile satıyor; aktarıcı fiyatları
+kataloğun kendi kuruyla (11,4) çeviriyor. Çevrilmeseydi her ürün 11 kat ucuz
+görünürdü. Örnek: 155,00 € → **1 767,00 kr**.
+
+Ürün adı diğer dilde İsveççeyle aynıysa çeviri satırı yazılmaz — Shopify o
+durumda ana dile döner, gereksiz satır sorun çıkarır.
 
 ### Ne nereye gitti
 
@@ -63,7 +68,8 @@ yazılmaz — Shopify o durumda ana dile döner, gereksiz satır sorun çıkarı
 | `i18n.sv.name` | Title |
 | `i18n.sv.desc` + teknik özellikler | Body (HTML), tablo olarak |
 | `sku` | Variant SKU |
-| `priceCents` | Variant Price (SEK) |
+| `priceCents` (EUR cent) | Variant Price — **SEK'e çevrilir** (EUR × 11,4) |
+| `campaignOn` / `campaignPercent` | Variant Price = indirimli, Compare At = liste |
 | `stock` | Variant Inventory Qty |
 | `onRequest` | Inventory policy = `continue` + `siparis-uzerine` etiketi |
 | `weightKg` | Variant Grams |
@@ -98,7 +104,19 @@ her ürün doğru kategori etiketinde      OK
 sıralama (sortRank) etikete taşındı     OK
 CSV satır sırası: büyük ürünler önce    OK
 her kategori için koleksiyon var        OK  52 / 52
+fiyatlar SEK'e çevrilmiş (EUR × 11.4)   OK
+kampanya ve üstü çizili liste fiyatı    OK
 dosya boyutu / satır sınırı             OK  en büyüğü 1.5 MB
+```
+
+Kampanya yolu ayrıca `node scripts/shopify-kampanya-test.mjs` ile sınanıyor —
+katalogda şu an indirimli ürün olmadığı için yapay kampanyayla (0 hata):
+
+```
+100047  155,00 €  -%10  ->  Price 1590,30 kr   CompareAt 1767,00 kr
+100048   92,00 €  -%25  ->  Price  786,60 kr   CompareAt 1048,80 kr
+100054  103,00 €  -%50  ->  Price  587,10 kr   CompareAt 1174,20 kr
+kampanyasız üründe CompareAt boş
 ```
 
 Not: `textiles` (Textilier) koleksiyonu boş — katalogda da bu kategoride ürün
