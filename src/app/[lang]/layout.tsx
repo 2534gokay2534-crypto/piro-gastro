@@ -4,6 +4,10 @@ import ChatWidget from "@/components/ChatWidget";
 import StorefrontChrome from "@/components/StorefrontChrome";
 import { LANGS, isLang, t, type Lang } from "@/lib/i18n";
 
+/** Yayındaki sürüm: Vercel commit kısa kimliği (yerelde "yerel"). */
+const SURUM =
+  (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7) || "yerel";
+
 export function generateStaticParams() {
   return LANGS.map((lang) => ({ lang }));
 }
@@ -21,6 +25,11 @@ export default async function LangLayout({
 
   return (
     <html lang={l}>
+      <head>
+        {/* Dağıtım işareti — Vercel'de hangi sürümün yayında olduğunu
+            doğrulamak için. Görünmez, SEO'ya etkisi yok. */}
+        <meta name="pg-surum" content={SURUM} />
+      </head>
       <body>
         {/* Mağaza başlığı — /admin altında gizlenir */}
         <StorefrontChrome>
