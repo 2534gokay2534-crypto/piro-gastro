@@ -9,6 +9,11 @@ import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { db, dbVar } from "../src/lib/db";
 
+/**
+ * Adres ASLA yazdırılmaz — türü bile sabit bir listeden seçilir.
+ * (Bozuk biçimli bir .env satırı, regex ile maskeleme yapan kodda
+ * değerin sızmasına yol açmıştı; artık ham metin hiç basılmıyor.)
+ */
 const url = process.env.DATABASE_URL ?? "";
 const tur = url.startsWith("file:") ? "SQLite" : url.startsWith("postgres") ? "PostgreSQL" : "tanımsız";
 
